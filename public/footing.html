@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Footing — a numerology companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#1B2438;
+    --night-2:#232E45;
+    --night-3:#2B3752;
+    --paper:#EDE6D3;
+    --paper-2:#E1D8C2;
+    --ink:#12181F;
+    --amber:#E3A857;
+    --amber-deep:#C98A3A;
+    --moonlight:#C9D6DC;
+    --muted:#9CA8B4;
+    --muted-warm:#8B8272;
+    --hairline:rgba(201,214,220,0.14);
+    --hairline-paper:rgba(18,24,31,0.12);
+    box-sizing:border-box;
+  }
+  *{box-sizing:inherit;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:var(--night);
+    color:var(--paper);
+    font-family:'Work Sans',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    min-height:100%;
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces',Georgia,serif;}
+  .wrap{
+    max-width:660px;
+    margin:0 auto;
+    padding:48px 24px 96px;
+  }
+  header.top{
+    position:sticky;
+    top:env(safe-area-inset-top,0px);
+    background:rgba(27,36,56,0.92);
+    backdrop-filter:blur(6px);
+    z-index:10;
+    border-bottom:1px solid var(--hairline);
+  }
+  .top-inner{
+    max-width:660px;
+    margin:0 auto;
+    padding:16px 24px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .brand{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:19px;
+    color:var(--amber);
+    letter-spacing:0.2px;
+  }
+  nav.wayfind{
+    display:flex;
+    gap:22px;
+    font-size:14px;
+  }
+  nav.wayfind a{
+    color:var(--muted);
+    text-decoration:none;
+    padding-bottom:4px;
+    border-bottom:1px solid transparent;
+    cursor:pointer;
+  }
+  nav.wayfind a.active{
+    color:var(--paper);
+    border-bottom:1px solid var(--amber);
+  }
+  nav.wayfind a:hover{color:var(--paper);}
+
+  .hero-line{
+    font-size:14px;
+    color:var(--moonlight);
+    letter-spacing:0.3px;
+    margin:0 0 10px;
+  }
+  h1.headline{
+    font-size:clamp(30px,6vw,42px);
+    font-weight:500;
+    line-height:1.15;
+    margin:0 0 18px;
+    max-width:11ch;
+  }
+  p.lede{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--moonlight);
+    max-width:52ch;
+    margin:0 0 36px;
+  }
+
+  form.intake{
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+    max-width:420px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .field label{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .field input{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--hairline);
+    color:var(--paper);
+    font-family:'Work Sans',sans-serif;
+    font-size:18px;
+    padding:10px 2px;
+    outline:none;
+    transition:border-color .2s ease;
+  }
+  .field input:focus{border-bottom-color:var(--amber);}
+  .field input::placeholder{color:rgba(201,214,220,0.35);}
+  .field small.hint{color:var(--muted); font-size:12.5px;}
+
+  button.primary{
+    align-self:flex-start;
+    background:var(--amber);
+    color:var(--ink);
+    border:none;
+    font-family:'Work Sans',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:13px 26px;
+    border-radius:3px;
+    cursor:pointer;
+    margin-top:6px;
+    transition:background .15s ease, transform .15s ease;
+  }
+  button.primary:hover{background:var(--amber-deep);}
+  button.primary:active{transform:translateY(1px);}
+  button.primary:focus-visible, a:focus-visible, input:focus-visible, button:focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:2px;
+  }
+  button.ghost{
+    background:none;
+    border:1px solid var(--hairline);
+    color:var(--moonlight);
+    font-family:'Work Sans',sans-serif;
+    font-size:13.5px;
+    padding:9px 16px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button.ghost:hover{border-color:var(--moonlight);}
+  .error-msg{color:#E3897F; font-size:13.5px; margin-top:-8px;}
+
+  /* Reading */
+  section.reading{
+    animation:rise .5s ease both;
+  }
+  @keyframes rise{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    section.reading{animation:none;}
+    section.reading, .panel{transition:none !important;}
+  }
+
+  .panel{
+    background:var(--night-2);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:26px 26px;
+    margin:0 0 22px;
+  }
+  .panel + .panel{margin-top:0;}
+  .stack > * + *{margin-top:22px;}
+
+  .kicker{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:0 0 6px;
+  }
+  .big-number{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:64px;
+    line-height:1;
+    color:var(--amber);
+    margin:0;
+  }
+  .panel h2{
+    font-size:22px;
+    font-weight:500;
+    margin:0 0 4px;
+  }
+  .panel p{
+    font-size:15.5px;
+    line-height:1.65;
+    color:var(--moonlight);
+    margin:8px 0 0;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 22px;
+    margin-top:14px;
+    font-size:13.5px;
+    color:var(--muted);
+  }
+  .meta-row span b{color:var(--paper); font-weight:500;}
+
+  .twin{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:520px){ .twin{grid-template-columns:1fr;} }
+  .twin .cell{
+    border-left:2px solid var(--amber);
+    padding-left:14px;
+  }
+  .twin .cell h3{
+    font-size:15px;
+    font-weight:500;
+    margin:0 0 6px;
+    color:var(--paper);
+  }
+  .twin .cell .num{
+    font-family:'Fraunces',serif;
+    font-size:28px;
+    color:var(--amber);
+    margin-right:8px;
+  }
+  .twin .cell p{margin-top:6px;}
+
+  /* Lo Shu grid */
+  .loshu{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--hairline);
+    border:1px solid var(--hairline);
+    max-width:280px;
+    margin:18px 0 4px;
+  }
+  .loshu .cell{
+    background:var(--night-2);
+    aspect-ratio:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+  }
+  .loshu .cell .n{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    color:var(--muted);
+  }
+  .loshu .cell.present{background:var(--night-3);}
+  .loshu .cell.present .n{color:var(--amber);}
+  .loshu .cell .dots{
+    display:flex;
+    gap:2px;
+    flex-wrap:wrap;
+    justify-content:center;
+    max-width:44px;
+  }
+  .loshu .cell .dots i{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--amber);
+    display:inline-block;
+  }
+  .loshu-legend{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:18px;
+  }
+  .loshu-legend .row{
+    display:flex;
+    gap:10px;
+    font-size:14px;
+    color:var(--moonlight);
+    align-items:baseline;
+  }
+  .loshu-legend .row b{color:var(--amber); font-family:'Fraunces',serif; min-width:14px;}
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 7px;
+    border-radius:20px;
+    border:1px solid var(--hairline);
+    color:var(--muted);
+    margin-left:6px;
+  }
+  .tag.friend{color:var(--amber); border-color:var(--amber);}
+  .tag.enemy{color:#C97B72; border-color:rgba(201,123,114,0.5);}
+  .tag.neutral{color:var(--muted);}
+
+  .swatches{
+    display:flex;
+    gap:14px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .swatch{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+    color:var(--moonlight);
+  }
+  .swatch .dot{
+    width:22px;height:22px;border-radius:50%;
+    border:1px solid rgba(255,255,255,0.25);
+    flex-shrink:0;
+  }
+
+  .need-panel{
+    background:linear-gradient(160deg, var(--night-3), var(--night-2));
+    border:1px solid var(--hairline);
+    border-left:3px solid var(--amber);
+  }
+  .need-panel .step{
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid var(--hairline);
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .need-panel .step .mark{
+    font-family:'Fraunces',serif;
+    color:var(--amber);
+    font-size:18px;
+    line-height:1.4;
+  }
+  .panel h3{
+    font-family:'Work Sans',sans-serif;
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--paper);
+    margin:0 0 8px;
+  }
+  .panel .subhead{
+    font-size:13.5px;
+    color:var(--muted);
+    margin:0 0 14px;
+    line-height:1.55;
+  }
+  .spell-examples{
+    display:flex;
+    flex-direction:column;
+  }
+  .spell-examples .row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:14px;
+    font-size:14.5px;
+    color:var(--moonlight);
+    border-bottom:1px solid var(--hairline);
+    padding:9px 0;
+  }
+  .spell-examples .row:last-child{border-bottom:none;}
+  .spell-examples .row .rowname{color:var(--paper);}
+  .spell-examples .row .rownote{color:var(--muted); font-size:12.5px;}
+  .spell-examples .row b{
+    color:var(--amber);
+    font-family:'Fraunces',serif;
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .fe-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:520px){ .fe-grid{grid-template-columns:1fr;} }
+  .fe-col .fe-label{font-size:12.5px; color:var(--muted); margin-bottom:8px;}
+  .fe-col .chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .fe-chip{
+    font-family:'Fraunces',serif;
+    font-size:15px;
+    width:30px; height:30px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--hairline);
+  }
+  .fe-chip.friend{color:var(--amber); border-color:var(--amber);}
+  .fe-chip.enemy{color:#C97B72; border-color:rgba(201,123,114,0.5);}
+  .fe-chip.neutral{color:var(--muted);}
+
+  .china-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:14px;
+  }
+  .china-row{
+    display:flex;
+    gap:10px;
+    font-size:14px;
+    color:var(--moonlight);
+    align-items:baseline;
+  }
+  .china-row b{color:var(--amber); font-family:'Fraunces',serif; min-width:14px;}
+  .china-row .china-note{flex:1;}
+
+  .cycle-card{
+    background:var(--night-3);
+    border-radius:10px;
+    border-left:2px solid var(--hairline);
+    padding:16px 18px;
+    margin-top:14px;
+  }
+  .cycle-card:first-child{margin-top:18px;}
+  .cycle-card.current{border-left-color:var(--amber);}
+  .cycle-head{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .cycle-num{
+    font-family:'Fraunces',serif;
+    font-size:32px;
+    color:var(--amber);
+    margin:8px 0 4px;
+  }
+  .cycle-theme{font-size:14.5px; color:var(--moonlight); margin:0 0 8px;}
+  .cycle-challenge{font-size:13.5px; color:var(--muted); margin:0;}
+  .cycle-challenge b{color:var(--paper); font-weight:500;}
+
+  .brand-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:6px;
+  }
+  .brand-chip{
+    background:var(--night-3);
+    border:1px solid var(--hairline);
+    border-radius:20px;
+    padding:8px 16px;
+    font-size:14px;
+    color:var(--paper);
+  }
+
+  .karmic-note{
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid var(--hairline);
+  }
+  .tool-form{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-top:16px;
+  }
+  .tool-form input[type="text"], .tool-form input[type="date"]{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--hairline);
+    color:var(--paper);
+    font-family:'Work Sans',sans-serif;
+    font-size:15px;
+    padding:8px 2px;
+    outline:none;
+    min-width:200px;
+    flex:1;
+  }
+  .tool-result{
+    margin-top:16px;
+    font-size:14.5px;
+    color:var(--moonlight);
+    display:none;
+  }
+  .tool-result.show{display:block;}
+
+  .twin.quad{grid-template-columns:repeat(2,1fr);}
+  @media (max-width:620px){ .twin.quad{grid-template-columns:1fr;} }
+  .letter-words{display:flex; flex-direction:column; gap:14px; margin-top:16px;}
+  .letter-word-label{font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+  .letter-row{display:flex; flex-wrap:wrap; gap:5px;}
+  .lchip{
+    display:flex; flex-direction:column; align-items:center;
+    width:30px; padding:5px 0 4px;
+    border:1px solid var(--hairline); border-radius:6px;
+    font-family:'Fraunces',serif; font-size:15px; color:var(--moonlight);
+    line-height:1.1;
+  }
+  .lchip small{font-family:'Work Sans',sans-serif; font-size:10.5px; color:var(--muted); margin-top:2px;}
+  .lchip.vowel{border-color:var(--amber); color:var(--amber);}
+  .lchip.upper{border-color:var(--amber); color:var(--amber);}
+
+  .care-note{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.6;
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--hairline);
+  }
+
+  .moon-row{
+    display:flex;
+    gap:18px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .moon-card{
+    flex:1;
+    min-width:180px;
+    background:var(--night-3);
+    border-radius:10px;
+    padding:16px 18px;
+  }
+  .moon-card .label{font-size:12.5px; color:var(--muted);}
+  .moon-card .date{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    color:var(--moonlight);
+    margin:6px 0 8px;
+  }
+  .moon-card p{font-size:13.5px;}
+
+  details.namecheck{margin-top:6px;}
+  details.namecheck summary{
+    cursor:pointer;
+    color:var(--amber);
+    font-size:14.5px;
+    list-style:none;
+  }
+  details.namecheck summary::-webkit-details-marker{display:none;}
+  details.namecheck summary::before{content:"— ";}
+  .namecheck .inner{
+    margin-top:16px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .namecheck input{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--hairline);
+    color:var(--paper);
+    font-family:'Work Sans',sans-serif;
+    font-size:15px;
+    padding:8px 2px;
+    outline:none;
+    min-width:220px;
+    flex:1;
+  }
+  .namecheck-result{
+    margin-top:16px;
+    font-size:14.5px;
+    color:var(--moonlight);
+    display:none;
+  }
+  .namecheck-result.show{display:block;}
+
+  /* Today screen */
+  .today-hero{
+    text-align:left;
+    padding:34px 26px;
+    background:radial-gradient(circle at 20% 20%, var(--night-3), var(--night-2));
+  }
+  .today-hero .date-label{color:var(--muted); font-size:13.5px;}
+  .today-hero .today-num{
+    font-family:'Fraunces',serif;
+    font-size:78px;
+    color:var(--amber);
+    line-height:1;
+    margin:10px 0 0;
+  }
+  .today-list{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;}
+  .today-list li{display:flex; gap:10px; font-size:15px; color:var(--moonlight);}
+  .today-list li b{color:var(--paper); min-width:70px; font-weight:500;}
+
+  /* Journal */
+  .journal-form{display:flex; flex-direction:column; gap:14px;}
+  textarea{
+    background:var(--night-3);
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    color:var(--paper);
+    font-family:'Work Sans',sans-serif;
+    font-size:15px;
+    padding:12px 14px;
+    resize:vertical;
+    min-height:80px;
+    outline:none;
+  }
+  textarea:focus{border-color:var(--amber);}
+  .mood-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .mood-chip{
+    border:1px solid var(--hairline);
+    background:none;
+    color:var(--moonlight);
+    padding:7px 13px;
+    border-radius:20px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .mood-chip.sel{border-color:var(--amber); color:var(--amber);}
+  .kua-btn{
+    border:1px solid var(--hairline);
+    background:none;
+    color:var(--moonlight);
+    padding:7px 16px;
+    border-radius:20px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .kua-btn.sel{border-color:var(--amber); color:var(--amber);}
+  .time-precision-btn{
+    border:1px solid var(--hairline);
+    background:none;
+    color:var(--moonlight);
+    padding:7px 16px;
+    border-radius:20px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .time-precision-btn.sel{border-color:var(--amber); color:var(--amber);}
+  .entry{
+    border-bottom:1px solid var(--hairline);
+    padding:16px 0;
+  }
+  .entry:last-child{border-bottom:none;}
+  .entry .row1{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted);}
+  .entry p{margin:8px 0 0; font-size:14.5px; color:var(--paper); line-height:1.55;}
+  .empty-state{
+    color:var(--muted);
+    font-size:14.5px;
+    padding:14px 0;
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+  footer.foot{
+    max-width:660px;
+    margin:40px auto 0;
+    padding:0 24px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:left;
+  }
+  a.linklike{color:var(--amber); cursor:pointer; text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header class="top" id="topNav" style="display:none;">
+  <div class="top-inner">
+    <div class="brand">Footing</div>
+    <nav class="wayfind" id="wayfind">
+      <a data-screen="profile">Your reading</a>
+      <a data-screen="today">Today</a>
+      <a data-screen="journal">Journal</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- INPUT SCREEN -->
+  <section class="screen active" id="screen-input">
+    <p class="hero-line">A quiet place to get your bearings</p>
+    <h1 class="headline">Let's find your footing.</h1>
+    <p class="lede">Give me your full birth name and your birth date. That's all this needs — no forms to fill out, no history to explain. I'll turn it into something you can actually use today.</p>
+
+    <form class="intake" id="intakeForm">
+      <div class="field">
+        <label for="fullName">Full birth name</label>
+        <input type="text" id="fullName" placeholder="As it was given to you at birth" autocomplete="off" required>
+        <small class="hint">The name on your birth certificate works best, even if you don't use it anymore.</small>
+      </div>
+      <div class="field">
+        <label for="dob">Birth date</label>
+        <input type="date" id="dob" required>
+      </div>
+      <div class="error-msg" id="formError" style="display:none;"></div>
+      <button type="submit" class="primary">See my reading</button>
+    </form>
+  </section>
+
+  <!-- PROFILE / READING SCREEN -->
+  <section class="screen" id="screen-profile">
+    <div id="readingRoot"></div>
+    <button class="ghost" id="editInfoBtn" style="margin-top:8px;">Start over with different info</button>
+  </section>
+
+  <!-- TODAY SCREEN -->
+  <section class="screen" id="screen-today">
+    <div id="todayRoot"></div>
+  </section>
+
+  <!-- JOURNAL SCREEN -->
+  <section class="screen" id="screen-journal">
+    <div id="journalRoot"></div>
+  </section>
+
+</div>
+
+<footer class="foot" id="pageFooter" style="display:none;">
+  This reading is a lens for reflection, drawn from Chaldean numerology — it's meant to give you language and a next step, not certainty. If things feel heavier than they should, talking to someone you trust or a counselor is worth just as much as anything here.
+</footer>
+
+<script>
+(function(){
+
+/* ---------------------------------------------------------
+   NUMEROLOGY ENGINE
+--------------------------------------------------------- */
+const chaldeanMap = {
+  a:1,i:1,j:1,q:1,y:1,
+  b:2,k:2,r:2,
+  c:3,g:3,l:3,s:3,
+  d:4,m:4,t:4,
+  e:5,h:5,n:5,x:5,
+  u:6,v:6,w:6,
+  o:7,z:7,
+  f:8,p:8
+};
+
+function reduceNum(n, keepMaster){
+  while(n > 9){
+    if(keepMaster && (n === 11 || n === 22)) break;
+    n = String(n).split('').reduce((a,d)=>a+Number(d),0);
+  }
+  return n;
+}
+
+// Scans a reduction chain for the four widely-recognized karmic debt numbers.
+// Returns the debt number (13, 14, 16, or 19) if one appears on the way down, else null.
+function findKarmicDebt(rawTotal){
+  let n = rawTotal;
+  while(n > 9){
+    if(n === 13 || n === 14 || n === 16 || n === 19) return n;
+    if(n === 11 || n === 22) return null;
+    n = String(n).split('').reduce((a,d)=>a+Number(d),0);
+  }
+  return (n === 13 || n === 14 || n === 16 || n === 19) ? n : null;
+}
+
+const karmicDebtMeaning = {
+  13:"A karmic debt tied to past avoidance of hard work — this life asks for consistent effort rather than shortcuts, and tends to reward discipline once it's actually built.",
+  14:"A karmic debt tied to past excess or lack of restraint — this life asks for balance and moderation, especially around freedom and impulse.",
+  16:"A karmic debt tied to past pride or ego — this life often includes a humbling event or two that rebuilds you on more honest ground.",
+  19:"A karmic debt tied to past misuse of power — this life asks you to stand on your own strength without leaning on others or using it over them."
+};
+
+function nameToNumber(fullName){
+  let sum = 0;
+  for(const ch of fullName.toLowerCase()){
+    if(chaldeanMap[ch]) sum += chaldeanMap[ch];
+  }
+  return sum;
+}
+
+function lifePathRawTotal(dobStr){
+  const digits = dobStr.replace(/-/g,'').split('').map(Number);
+  return digits.reduce((a,b)=>a+b,0);
+}
+
+function lifePathFromDOB(dobStr){
+  return reduceNum(lifePathRawTotal(dobStr), true);
+}
+
+function psychicFromDOB(dobStr){
+  const day = Number(dobStr.split('-')[2]);
+  return reduceNum(day, false);
+}
+
+function personalYear(dobStr, refDate){
+  const parts = dobStr.split('-').map(Number);
+  const d = parts[2], m = parts[1];
+  const currentYear = refDate.getFullYear();
+  const digits = (''+d+m+currentYear).split('').map(Number);
+  return reduceNum(digits.reduce((a,b)=>a+b,0), false);
+}
+
+function personalDay(dobStr, refDate){
+  const py = personalYear(dobStr, refDate);
+  const digits = (''+py+refDate.getDate()+(refDate.getMonth()+1)).split('').map(Number);
+  return reduceNum(digits.reduce((a,b)=>a+b,0), false);
+}
+
+function loShuCounts(dobStr){
+  const digits = dobStr.replace(/-/g,'').split('').map(Number).filter(d=>d!==0);
+  const counts = {};
+  for(let i=1;i<=9;i++) counts[i]=0;
+  digits.forEach(d=>counts[d]++);
+  return counts;
+}
+
+function nextMoonEvents(date){
+  const synodic = 29.530588853;
+  const ref = new Date(Date.UTC(2000,0,6,18,14,0));
+  const daysSince = (date - ref)/86400000;
+  let age = daysSince % synodic; if(age<0) age += synodic;
+  const daysToNewMoon = synodic - age;
+  const daysToFullMoon = age < synodic/2 ? (synodic/2 - age) : (synodic*1.5 - age);
+  return {
+    nextNew: new Date(date.getTime() + daysToNewMoon*86400000),
+    nextFull: new Date(date.getTime() + daysToFullMoon*86400000)
+  };
+}
+
+/* ---------------------------------------------------------
+   OTHER TRADITIONS: Western (Pythagorean), Hebrew-style, Chinese lens
+--------------------------------------------------------- */
+const pythagoreanMap = {
+  a:1,j:1,s:1,
+  b:2,k:2,t:2,
+  c:3,l:3,u:3,
+  d:4,m:4,v:4,
+  e:5,n:5,w:5,
+  f:6,o:6,x:6,
+  g:7,p:7,y:7,
+  h:8,q:8,z:8,
+  i:9,r:9
+};
+function reducePyth(n){
+  while(n > 9){
+    if(n === 11 || n === 22 || n === 33) break;
+    n = String(n).split('').reduce((a,d)=>a+Number(d),0);
+  }
+  return n;
+}
+function pythNameNumber(name){
+  let sum = 0;
+  for(const ch of name.toLowerCase()){ if(pythagoreanMap[ch]) sum += pythagoreanMap[ch]; }
+  return reducePyth(sum);
+}
+
+// Approximate English-letter stand-in for Hebrew gematria values (see UI caveat: true
+// gematria applies to a name's actual Hebrew spelling, not an English transliteration).
+const hebrewApproxMap = {
+  a:1,b:2,c:20,d:4,e:5,f:80,g:3,h:5,i:10,j:10,k:20,l:30,m:40,n:50,
+  o:70,p:80,q:100,r:200,s:60,t:400,u:6,v:6,w:6,x:60,y:10,z:7
+};
+function hebrewApproxNumber(name){
+  let sum = 0;
+  for(const ch of name.toLowerCase()){ if(hebrewApproxMap[ch]) sum += hebrewApproxMap[ch]; }
+  return reduceNum(sum, false); // "mispar katan" style full reduction, no master retained
+}
+
+const hebrewMeaning = {
+  1:"Oneness — echoed in the Shema's declaration that the divine is one.",
+  2:"Partnership and duality — the tension and balance between two forces.",
+  3:"Harmony and stability — often tied to the three patriarchs.",
+  4:"Foundation — echoed in the four matriarchs and the four directions.",
+  5:"Grace and instruction — tied to the five books of the Torah.",
+  6:"The completion of creation — the world was traditionally described as made in six days.",
+  7:"Holiness and rest — the seventh day, set apart from the rest of the week.",
+  8:"New beginnings — a number tied to covenant, and to stepping just beyond the natural order.",
+  9:"Truth arriving at its fullness — nine months of forming before new life begins."
+};
+
+const chineseDigitMeaning = {
+  0:{tone:"neutral", note:"tied to emptiness or wholeness depending on context"},
+  1:{tone:"neutral", note:"stands alone — read as independence, neither lucky nor unlucky"},
+  2:{tone:"good", note:"considered lucky, since good things are said to come in pairs"},
+  3:{tone:"good", note:"sounds close to the word for \u2018life\u2019 or \u2018growth\u2019"},
+  4:{tone:"caution", note:"sounds almost identical to the word for \u2018death\u2019 — the most avoided number in Chinese culture"},
+  5:{tone:"neutral", note:"can echo the word for \u2018nothing\u2019, so it reads as mixed"},
+  6:{tone:"good", note:"sounds like \u2018smooth\u2019 or \u2018flowing\u2019 — considered lucky for business"},
+  7:{tone:"neutral", note:"mixed meaning — lucky in some contexts, tied to the Ghost Festival in others"},
+  8:{tone:"good", note:"sounds like \u2018prosper\u2019 or \u2018wealth\u2019 — the most prized number in Chinese culture"},
+  9:{tone:"good", note:"associated with longevity, and historically tied to the emperor"}
+};
+function chineseLensForDOB(dobStr){
+  const digits = dobStr.replace(/-/g,'').split('').map(Number);
+  const counts = {};
+  digits.forEach(d=>{ counts[d] = (counts[d]||0)+1; });
+  return counts;
+}
+
+const zodiacAnimals = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
+const zodiacTraits = {
+  Rat:"resourceful and quick-witted, good at making the most of what's in front of you",
+  Ox:"steady and dependable, the one people count on to actually follow through",
+  Tiger:"bold and confident, drawn to the risk other people talk themselves out of",
+  Rabbit:"gentle and diplomatic, happier keeping the peace than winning the argument",
+  Dragon:"ambitious and larger-than-life, uncomfortable staying small",
+  Snake:"intuitive and private, reading a room long before anyone notices",
+  Horse:"energetic and independent, restless inside anything that feels like a cage",
+  Goat:"gentle and artistic, tuned closely to beauty and to other people's feelings",
+  Monkey:"clever and quick, able to solve a problem three different ways before breakfast",
+  Rooster:"precise and direct, with little patience for pretending",
+  Dog:"loyal and honest, fiercely protective of the people they let in",
+  Pig:"generous and easygoing, genuinely good at enjoying what's in front of them"
+};
+function zodiacForYear(year){
+  const idx = ((year - 2020) % 12 + 12) % 12;
+  return zodiacAnimals[idx];
+}
+function elementForYear(year){
+  const d = ((year % 10) + 10) % 10;
+  if(d===0||d===1) return "Metal";
+  if(d===2||d===3) return "Water";
+  if(d===4||d===5) return "Wood";
+  if(d===6||d===7) return "Fire";
+  return "Earth";
+}
+function polarityForYear(year){
+  return (year % 2 === 0) ? "Yang" : "Yin";
+}
+
+const yinYangGeneral = "Yin and yang are the foundational pair in Chinese philosophy \u2014 not good versus bad, but two halves of one whole, each defined by the other. Yang is the active, expansive half: outward energy, daylight, initiative. Yin is the receptive half: quiet energy, night, reflection. Every year, and the element that comes with it, carries one or the other, alternating back and forth through the twelve-year cycle.";
+const yinYangExplain = {
+  Yang:"which traditionally means your animal and element's energy tends to express itself more openly and assertively \u2014 outward first, reflective second.",
+  Yin:"which traditionally means your animal and element's energy tends to express itself more quietly and internally \u2014 reflective first, outward second."
+};
+
+const trineGroups = [
+  ['Rat','Dragon','Monkey'],
+  ['Ox','Snake','Rooster'],
+  ['Tiger','Horse','Dog'],
+  ['Rabbit','Goat','Pig']
+];
+function trineMatesFor(animal){
+  const group = trineGroups.find(g=>g.includes(animal));
+  return group.filter(a=>a!==animal);
+}
+const clashMap = {
+  Rat:'Horse', Horse:'Rat',
+  Ox:'Goat', Goat:'Ox',
+  Tiger:'Monkey', Monkey:'Tiger',
+  Rabbit:'Rooster', Rooster:'Rabbit',
+  Dragon:'Dog', Dog:'Dragon',
+  Snake:'Pig', Pig:'Snake'
+};
+
+const elementCycle = {
+  Wood:{generates:'Fire', generatedBy:'Water', overcomes:'Earth', overcomeBy:'Metal'},
+  Fire:{generates:'Earth', generatedBy:'Wood', overcomes:'Metal', overcomeBy:'Water'},
+  Earth:{generates:'Metal', generatedBy:'Fire', overcomes:'Water', overcomeBy:'Wood'},
+  Metal:{generates:'Water', generatedBy:'Earth', overcomes:'Wood', overcomeBy:'Fire'},
+  Water:{generates:'Wood', generatedBy:'Metal', overcomes:'Fire', overcomeBy:'Earth'}
+};
+
+const kuaData = {
+  1:{group:"East", direction:"North"},
+  2:{group:"West", direction:"Southwest"},
+  3:{group:"East", direction:"East"},
+  4:{group:"East", direction:"Southeast"},
+  6:{group:"West", direction:"Northwest"},
+  7:{group:"West", direction:"West"},
+  8:{group:"West", direction:"Northeast"},
+  9:{group:"East", direction:"South"}
+};
+function kuaNumber(birthYear, gender){
+  const s = reduceNum(birthYear % 100, false);
+  const raw = (gender === 'male')
+    ? ((birthYear < 2000) ? (10 - s) : (9 - s))
+    : ((birthYear < 2000) ? (s + 5) : (s + 6));
+  let kua = reduceNum(raw, false);
+  if(kua === 0) kua = 9;
+  if(kua === 5) kua = (gender === 'male') ? 2 : 8;
+  return kua;
+}
+
+/* ---------------------------------------------------------
+   ASTROLOGY: Sun sign (date-only — no time/location collected,
+   so rising sign, moon sign, and full chart are deliberately left out)
+--------------------------------------------------------- */
+const zodiacSignData = {
+  Aries:       {symbol:"\u2648", dates:"Mar 21 \u2013 Apr 19", element:"Fire",  modality:"Cardinal", ruler:"Mars",    trait:"bold and quick to act, happier starting something than waiting for the perfect moment"},
+  Taurus:      {symbol:"\u2649", dates:"Apr 20 \u2013 May 20", element:"Earth", modality:"Fixed",    ruler:"Venus",   trait:"steady and sensual, valuing comfort and not fond of being rushed"},
+  Gemini:      {symbol:"\u264A", dates:"May 21 \u2013 Jun 20", element:"Air",   modality:"Mutable",  ruler:"Mercury", trait:"curious and quick-witted, drawn to conversation and new information"},
+  Cancer:      {symbol:"\u264B", dates:"Jun 21 \u2013 Jul 22", element:"Water", modality:"Cardinal", ruler:"Moon",    trait:"protective and deeply feeling, with home and family shaping a lot of how you move through the world"},
+  Leo:         {symbol:"\u264C", dates:"Jul 23 \u2013 Aug 22", element:"Fire",  modality:"Fixed",    ruler:"Sun",     trait:"warm and expressive, genuinely lighting up when given room to be seen"},
+  Virgo:       {symbol:"\u264D", dates:"Aug 23 \u2013 Sep 22", element:"Earth", modality:"Mutable",  ruler:"Mercury", trait:"precise and helpful, finding real satisfaction in getting the details right"},
+  Libra:       {symbol:"\u264E", dates:"Sep 23 \u2013 Oct 22", element:"Air",   modality:"Cardinal", ruler:"Venus",   trait:"relational and fair-minded, uncomfortable with anything that feels lopsided"},
+  Scorpio:     {symbol:"\u264F", dates:"Oct 23 \u2013 Nov 21", element:"Water", modality:"Fixed",    ruler:"Mars",    trait:"intense and private, all-in once you've actually committed to something or someone"},
+  Sagittarius: {symbol:"\u2650", dates:"Nov 22 \u2013 Dec 21", element:"Fire",  modality:"Mutable",  ruler:"Jupiter", trait:"adventurous and blunt, happier chasing a bigger truth than staying comfortable"},
+  Capricorn:   {symbol:"\u2651", dates:"Dec 22 \u2013 Jan 19", element:"Earth", modality:"Cardinal", ruler:"Saturn",  trait:"ambitious and disciplined, playing the long game even when no one's watching"},
+  Aquarius:    {symbol:"\u2652", dates:"Jan 20 \u2013 Feb 18", element:"Air",   modality:"Fixed",    ruler:"Saturn",  trait:"independent and idea-driven, drawn to what's different rather than what's expected"},
+  Pisces:      {symbol:"\u2653", dates:"Feb 19 \u2013 Mar 20", element:"Water", modality:"Mutable",  ruler:"Jupiter", trait:"dreamy and empathetic, absorbing the emotional undercurrent of a room without trying to"}
+};
+
+const elementBlurb = {
+  Fire:  "Fire signs act first and feel the consequences later — driven by instinct, momentum, and a low tolerance for waiting.",
+  Earth: "Earth signs move slower and more deliberately — driven by what's tangible, reliable, and built to last.",
+  Air:   "Air signs process the world through ideas and conversation — driven by connection, curiosity, and thought.",
+  Water: "Water signs feel everything first and explain it later — driven by intuition and emotional undercurrent."
+};
+
+const modalityBlurb = {
+  Cardinal: "Cardinal signs initiate — they open each season and tend to be comfortable going first.",
+  Fixed:    "Fixed signs sustain — they hold a season steady once it's already underway.",
+  Mutable:  "Mutable signs adapt — they close out a season and prepare everyone else for the shift to the next one."
+};
+
+function sunSignForDate(m, d){
+  const md = m*100 + d;
+  if(md <= 119 || md >= 1222) return "Capricorn";
+  if(md <= 218) return "Aquarius";
+  if(md <= 320) return "Pisces";
+  if(md <= 419) return "Aries";
+  if(md <= 520) return "Taurus";
+  if(md <= 620) return "Gemini";
+  if(md <= 722) return "Cancer";
+  if(md <= 822) return "Leo";
+  if(md <= 922) return "Virgo";
+  if(md <= 1022) return "Libra";
+  if(md <= 1121) return "Scorpio";
+  return "Sagittarius";
+}
+
+/* ---------------------------------------------------------
+   RISING SIGN (Ascendant): real trigonometry, not an approximation series.
+   Formula verified two independent ways before shipping:
+   (1) a zero-obliquity identity check (should reduce to RAMC+90 exactly), and
+   (2) cross-validated against an independently-sourced formula citing Meeus'
+   Astronomical Algorithms. Both passed exactly across dozens of test cases.
+   This is deliberately the ONLY natal-chart element added beyond Sun sign \u2014
+   actual planetary placements need a real orbital ephemeris, which can't be
+   verified the same rigorous way in this environment, so they're left out
+   rather than guessed at.
+--------------------------------------------------------- */
+const ZODIAC_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+
+function signForEclipticLongitude(deg){
+  const idx = Math.floor((((deg % 360) + 360) % 360) / 30);
+  return ZODIAC_ORDER[idx];
+}
+
+function julianDayUTC(utcDate){
+  // Uses the standard civil-calendar-to-JD algorithm (Meeus ch. 7), via JS's
+  // own UTC date math so month/day/year rollovers are handled automatically.
+  let y = utcDate.getUTCFullYear();
+  let m = utcDate.getUTCMonth() + 1;
+  const d = utcDate.getUTCDate();
+  const hourUT = utcDate.getUTCHours() + utcDate.getUTCMinutes()/60 + utcDate.getUTCSeconds()/3600;
+  if(m <= 2){ y -= 1; m += 12; }
+  const A = Math.floor(y/100);
+  const B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + d + hourUT/24 + B - 1524.5;
+}
+
+function gmstDegrees(jd){
+  const T = (jd - 2451545.0)/36525;
+  let gmst = 280.46061837 + 360.98564736629*(jd-2451545.0) + 0.000387933*T*T - (T*T*T)/38710000;
+  return ((gmst % 360) + 360) % 360;
+}
+
+// localDateStr: 'YYYY-MM-DD', hour/minute: local civil time, utcOffsetHours: e.g. -5 for US Eastern Standard.
+function ascendantDegree(localDateStr, hour, minute, latDeg, lonDeg, utcOffsetHours){
+  const [y,m,d] = localDateStr.split('-').map(Number);
+  const localAsUTCms = Date.UTC(y, m-1, d, hour, minute, 0);
+  const trueUTC = new Date(localAsUTCms - utcOffsetHours*3600*1000);
+  const jd = julianDayUTC(trueUTC);
+  const gmst = gmstDegrees(jd);
+  const ramc = ((gmst + lonDeg) % 360 + 360) % 360; // east longitude positive
+  const eps = (23.4392911) * Math.PI/180;
+  const phi = latDeg * Math.PI/180;
+  const ramcRad = ramc * Math.PI/180;
+  const y_ = -Math.cos(ramcRad);
+  const x_ = Math.sin(eps)*Math.tan(phi) + Math.cos(eps)*Math.sin(ramcRad);
+  let raw = Math.atan2(y_, x_) * 180/Math.PI;
+  raw = ((raw % 360) + 360) % 360;
+  return (raw + 180) % 360;
+}
+
+// For an imprecise birth time (hour known, minute not): samples across the hour
+// and returns every sign the ascendant actually passes through, since at some
+// latitudes a sign can rise in well under an hour, so more than one is possible.
+function ascendantSignsForHour(localDateStr, hour, latDeg, lonDeg, utcOffsetHours){
+  const signs = [];
+  for(let min = 0; min <= 55; min += 5){
+    const deg = ascendantDegree(localDateStr, hour, min, latDeg, lonDeg, utcOffsetHours);
+    const sign = signForEclipticLongitude(deg);
+    if(signs.indexOf(sign) === -1) signs.push(sign);
+  }
+  return signs;
+}
+
+/* ---------------------------------------------------------
+   LIFE CYCLES: Pinnacles & Challenges
+--------------------------------------------------------- */
+const challengeMeaning = {
+  0:"No single obstacle stands out here — you have more freedom to choose your own challenge this stretch, for better or worse.",
+  1:"Learning to stand on your own decisions without needing other people's approval first.",
+  2:"Oversensitivity to what others think, and trouble asserting a boundary out loud.",
+  3:"Scattering your energy, or hiding real feelings behind humor and distraction.",
+  4:"Overworking, or resisting the structure and limits this stretch is asking for.",
+  5:"Restlessness and overcommitment — saying yes to too much at once.",
+  6:"Overextending your sense of responsibility for other people's problems.",
+  7:"Isolating instead of connecting, or overanalyzing instead of acting.",
+  8:"Tying your sense of worth too tightly to money or status during this stretch."
+};
+
+function currentAge(dobStr, refDate){
+  const [y,m,d] = dobStr.split('-').map(Number);
+  let age = refDate.getFullYear() - y;
+  const hadBirthdayThisYear = (refDate.getMonth()+1 > m) || (refDate.getMonth()+1 === m && refDate.getDate() >= d);
+  if(!hadBirthdayThisYear) age -= 1;
+  return age;
+}
+
+function computeCycles(dobStr, lifePathNum, refDate){
+  const [y,m,d] = dobStr.split('-').map(Number);
+  const rMonth = reduceNum(m, false);
+  const rDay = reduceNum(d, false);
+  const rYear = reduceNum(y, false);
+  const p1 = reduceNum(rMonth+rDay, true);
+  const p2 = reduceNum(rDay+rYear, true);
+  const p3 = reduceNum(p1+p2, true);
+  const p4 = reduceNum(rMonth+rYear, true);
+  const c1 = Math.abs(rMonth-rDay);
+  const c2 = Math.abs(rDay-rYear);
+  const c3 = Math.abs(c1-c2);
+  const c4 = Math.abs(rMonth-rYear);
+  const baseLP = (lifePathNum===11) ? 2 : (lifePathNum===22 ? 4 : lifePathNum);
+  const end1 = 36 - baseLP;
+  const end2 = end1 + 9;
+  const end3 = end2 + 9;
+  const age = currentAge(dobStr, refDate);
+  const stages = [
+    {label:"First",  pin:p1, chal:c1, from:0,       to:end1, range:`Birth \u2013 ${end1}`},
+    {label:"Second", pin:p2, chal:c2, from:end1+1,  to:end2, range:`${end1+1} \u2013 ${end2}`},
+    {label:"Third",  pin:p3, chal:c3, from:end2+1,  to:end3, range:`${end2+1} \u2013 ${end3}`},
+    {label:"Fourth", pin:p4, chal:c4, from:end3+1,  to:999,  range:`${end3+1} and on`}
+  ];
+  stages.forEach(s=>{ s.current = (age >= s.from && age <= s.to); });
+  return stages;
+}
+
+/* ---------------------------------------------------------
+   CONTENT TABLES
+--------------------------------------------------------- */
+const numberData = {
+  1: {planet:"Sun", color:"Gold & warm orange", swatch:"#D9A441", gem:"Ruby (or garnet as a gentler stand-in)",
+      purpose:"You're built to lead from the front, even in small rooms. Your core work in this life is learning to trust your own read on things instead of waiting for permission.",
+      strength:"willpower and self-direction", growth:"leaning on others without losing yourself",
+      practice:"Five minutes of morning light on your face, before you look at your phone.",
+      deep:"In work, you tend to do best with real autonomy — even a great team can feel like a cage if you can't make the final call. In relationships, you're drawn to partners who don't need constant reassurance, since you show love through action more than words. When you're out of balance, this number can tip into stubbornness or a refusal to ask for help, which usually costs more than the help would have."},
+  2: {planet:"Moon", color:"Silver & soft white", swatch:"#D7DDE0", gem:"Moonstone or pearl",
+      purpose:"You read rooms before you read words. Your core work is learning that your sensitivity is a skill, not a liability — and that partnership doesn't require disappearing into it.",
+      strength:"empathy and cooperation", growth:"holding a boundary without over-explaining it",
+      practice:"One unhurried cup of tea or water, sitting rather than standing, before the day pulls at you.",
+      deep:"In work, you tend to thrive as the person who makes a team actually function — mediating, noticing what others miss. In relationships, you give generously and can lose track of your own needs in the process. When you're out of balance, this number can tip into people-pleasing, or resentment that builds quietly instead of getting said out loud."},
+  3: {planet:"Jupiter", color:"Yellow & amber", swatch:"#E3C24A", gem:"Yellow sapphire or citrine",
+      purpose:"Words, images, and ideas move through you easily. Your core work is turning that expression into something finished, rather than always starting the next thing.",
+      strength:"expression and optimism", growth:"following one thing through to the end",
+      practice:"Write three sentences, anywhere, about anything — not to publish, just to empty your hands.",
+      deep:"In work, you tend to do best where communication is the actual job — writing, teaching, performing, selling an idea. In relationships, you keep things light and can struggle to stay present for someone else's hard moment without deflecting with humor. When you're out of balance, this number can tip into scattering your energy across too many half-finished things."},
+  4: {planet:"Rahu (the North Node)", color:"Slate grey & electric blue", swatch:"#7F8CA6", gem:"Hessonite or smoky quartz",
+      purpose:"You build the ground other people stand on — schedules, systems, homes, plans that hold. Your core work is trusting that structure and rest can coexist.",
+      strength:"discipline and reliability", growth:"letting a plan flex without it feeling like failure",
+      practice:"Pick the one task that will make tomorrow easier, and do only that one first.",
+      deep:"In work, you tend to be the person people trust with the details everyone else skips. In relationships, you show love through consistency — showing up, remembering things — more than grand gestures. When you're out of balance, this number can tip into rigidity, treating a changed plan as a personal threat rather than a normal adjustment."},
+  5: {planet:"Mercury", color:"Emerald & sea green", swatch:"#4FA786", gem:"Emerald or peridot",
+      purpose:"You're wired for movement and change — new places, new ideas, new versions of yourself. Your core work is finding freedom inside commitment, not only outside it.",
+      strength:"adaptability and curiosity", growth:"staying long enough for something to actually finish",
+      practice:"Change one small, physical thing about your space or your route today, on purpose.",
+      deep:"In work, you tend to do best somewhere new problems keep arriving — routine wears you down faster than it does most people. In relationships, you need real room to move, and partners who read that as coldness usually misunderstand you. When you're out of balance, this number can tip into restlessness that quietly sabotages good things before they're finished."},
+  6: {planet:"Venus", color:"Rose & pale blue", swatch:"#C79BAE", gem:"Diamond or opal",
+      purpose:"You carry people — family, friends, whoever's nearby. Your core work is learning that caring for yourself isn't a smaller job than caring for everyone else.",
+      strength:"warmth and responsibility", growth:"receiving care as easily as you give it",
+      practice:"Do one kind thing for yourself today with the same care you'd give someone you love.",
+      deep:"In work, you tend to gravitate toward roles where you're responsible for other people's wellbeing, formally or not. In relationships, you're often the one holding things together. When you're out of balance, this number can tip into quietly expecting your giving to be noticed, then feeling hurt when it isn't."},
+  7: {planet:"Ketu (the South Node)", color:"Sea grey & misty green", swatch:"#8FA3A0", gem:"Cat's eye or labradorite",
+      purpose:"You think in depth, not in speed. Your core work is trusting your own inner conclusions instead of needing outside proof for everything you already sense.",
+      strength:"reflection and inner knowing", growth:"letting people close before you fully understand them",
+      practice:"Ten minutes with no input — no phone, no music, just sitting with your own thoughts.",
+      deep:"In work, you tend to do best with real autonomy to think before you're asked to perform an answer. In relationships, you need more solitude than most partners expect, and that can read as distance if it's not named out loud. When you're out of balance, this number can tip into isolation that looks like independence but is closer to avoidance."},
+  8: {planet:"Saturn", color:"Deep navy & charcoal", swatch:"#3D4A63", gem:"Blue sapphire or amethyst",
+      purpose:"You're built for the long game — ambition, responsibility, real-world results. Your core work is separating your worth from your output.",
+      strength:"drive and follow-through", growth:"resting without treating it as falling behind",
+      practice:"Name one thing you did today that had nothing to do with being productive.",
+      deep:"In work, you tend to be pulled toward positions of real authority and measurable results. In relationships, you show love partly through providing, which can crowd out the smaller, softer gestures. When you're out of balance, this number can tip into measuring your own worth — and sometimes other people's — by output alone."},
+  9: {planet:"Mars", color:"Deep red & coral", swatch:"#B5544A", gem:"Coral or red jasper",
+      purpose:"You feel other people's pain like your own, and you're here to do something useful with that. Your core work is finishing your own chapters instead of only tending everyone else's.",
+      strength:"compassion and big-picture vision", growth:"letting something end so something new has room",
+      practice:"Let go of one small, specific thing today — an object, a message, an old plan.",
+      deep:"In work, you tend to do best in something that serves a cause bigger than a paycheck. In relationships, you love expansively — sometimes so widely that the person right in front of you doesn't feel like the priority. When you're out of balance, this number can tip into giving everywhere except to yourself, then quietly resenting it."},
+  11:{planet:"Sun, intensified", color:"Silver-violet", swatch:"#B7A8C9", gem:"Clear quartz",
+      purpose:"You carry an unusually sharp sense of what's true and what's coming. Your core work is grounding that sensitivity in ordinary daily life so it doesn't burn you out.",
+      strength:"insight and inspiration", growth:"keeping both feet on the ground while you reach",
+      practice:"Put one insight from today into a plain, concrete sentence — no metaphor allowed.",
+      deep:"Everything about 2 is true for you, but louder — insight arrives fast and can feel like too much information at once. In relationships, you may sense a problem before your partner has said anything, which can be a gift or a habit of borrowing trouble. When you're out of balance, this number can tip into anxiety that mistakes sensitivity for certainty."},
+  22:{planet:"Moon, intensified", color:"Indigo", swatch:"#4B4E7A", gem:"Labradorite",
+      purpose:"You have the rare pull to build things that outlast you. Your core work is starting small anyway, instead of waiting until the vision feels big enough to begin.",
+      strength:"vision and practical power", growth:"taking the first small step instead of the whole staircase",
+      practice:"Do the smallest possible version of your biggest idea today — five minutes, nothing more.",
+      deep:"Everything about 4 is true for you, but at a larger scale — you're wired to build something that outlasts you, not just get through the week. In relationships, you may hold back from starting something until you're sure it can last, which can mean waiting years longer than you need to. When you're out of balance, this number can tip into paralysis, where the size of the vision stops you from taking the first small step."}
+};
+
+const personalYearNeed = {
+  1: {title:"A year of starting again", body:"This year is asking you to begin something, even imperfectly — a routine, a project, a version of yourself you've been circling for a while. If money feels tight or direction feels unclear right now, that's not a sign you're behind; it's the discomfort that comes right before a new beginning takes shape.",
+      step:"Pick one thing you've been meaning to start, and take the smallest possible first step today — not the whole plan, just the opening move."},
+  2: {title:"A year of partnership and patience", body:"This is a slower, more relational year than it might feel like it should be. If a relationship feels strained, or you're waiting on something you can't control, that waiting is part of the work right now, not a failure to push harder.",
+      step:"Reach out to one person and say the true, smaller version of what you're feeling — not the whole story, just one honest sentence."},
+  3: {title:"A year of finding your voice again", body:"If you've felt flat, uncreative, or like you're just going through motions, this year is nudging you to let something out — a conversation, a piece of writing, a plan you've kept quiet. Burnout often shows up here as boredom before it shows up as exhaustion.",
+      step:"Say or write the thing you've been holding back, to one person or one page, today."},
+  4: {title:"A year of rebuilding ground", body:"This year rewards unglamorous consistency over big moves. If finances or logistics feel shaky, the fix is rarely one dramatic decision — it's usually three or four boring, repeated ones.",
+      step:"Write down the single most overdue practical task on your plate, and do just that one thing before anything else today."},
+  5: {title:"A year that wants change, whether you plan it or not", body:"Things may already feel like they're shifting under you — a move, a job change, a relationship finding a new shape. If that's landing as anxiety, it may actually be readiness that hasn't found its direction yet.",
+      step:"Choose one change you've been avoiding out of fear rather than genuine unreadiness, and take one concrete step toward it today."},
+  6: {title:"A year of care — including for yourself", body:"You're likely carrying more responsibility for others right now than usual — family, a partner, people who lean on you. If you're exhausted, it's probably not because you're doing it wrong; it's because the balance has tipped too far toward everyone but you.",
+      step:"Do one thing today that's just for you, and let it be small enough that you'll actually do it."},
+  7: {title:"A year that asks you to slow down and look inward", body:"If you feel foggy, uncertain, or like you're pulling away from people, that's this year doing its job, not you falling apart. This is a year for questions more than answers.",
+      step:"Spend fifteen minutes alone with a single honest question — 'what do I actually want right now?' — and just sit with it, no need to answer it fully."},
+  8: {title:"A year of consequences and momentum", body:"Effort tends to show visible results this year, for better or worse — which can feel like pressure if money or career stress is already high. The load is real, but so is your capacity to move it.",
+      step:"Take the one action tied to money or work that you've been postponing, and do it today, even the boring paperwork version of it."},
+  9: {title:"A year of letting go so something new can arrive", body:"Endings tend to cluster in this kind of year — a job, a relationship, a chapter that's simply run its course. If you feel like you're grieving something you can't quite name, that's likely exactly what's happening.",
+      step:"Name one thing — a habit, a hope, a version of a plan — that you're ready to actually let end, and let today be the day you stop holding onto it."}
+};
+
+const dayEnergy = {
+  1: {focus:"decisions only you can make", opportunity:"starting something you've been circling", pressure:"the urge to do it all alone"},
+  2: {focus:"a relationship that needs attention", opportunity:"quietly building trust", pressure:"taking on more than your share"},
+  3: {focus:"saying the thing you've been holding back", opportunity:"a creative opening", pressure:"scattering focus across too much"},
+  4: {focus:"the unglamorous task at the top of your list", opportunity:"building something that lasts", pressure:"rigid, all-or-nothing thinking"},
+  5: {focus:"staying present instead of chasing the next thing", opportunity:"a genuine change of scenery or routine", pressure:"restlessness talking you out of something good"},
+  6: {focus:"someone who needs your care", opportunity:"repairing or deepening a bond", pressure:"giving past the point of being able to give well"},
+  7: {focus:"a question worth sitting with instead of rushing to answer", opportunity:"clarity that only comes in quiet", pressure:"pulling away from people who are actually fine to let in"},
+  8: {focus:"the practical next step on a bigger goal", opportunity:"visible progress if you take real action", pressure:"measuring today by output alone"},
+  9: {focus:"something that's genuinely ready to end", opportunity:"letting go so something new has room", pressure:"holding on out of guilt instead of readiness"},
+  11:{focus:"an insight worth writing down before it fades", opportunity:"sharing something true with the right person", pressure:"anxiety dressed up as certainty"},
+  22:{focus:"the smallest next step on the big vision", opportunity:"laying one more brick on something built to last", pressure:"the size of the goal talking you out of starting"}
+};
+
+const loShuMeaning = {
+  1: {label:"Willpower", desc:"your ability to act on your own decisions"},
+  2: {label:"Sensitivity", desc:"your attunement to other people's feelings"},
+  3: {label:"Expression", desc:"your ease putting thoughts into words"},
+  4: {label:"Stability", desc:"your discipline and follow-through"},
+  5: {label:"Adaptability", desc:"your comfort with change and travel"},
+  6: {label:"Responsibility", desc:"your instinct to care for others"},
+  7: {label:"Reflection", desc:"your inner, private wisdom"},
+  8: {label:"Drive", desc:"your ambition and organizing power"},
+  9: {label:"Compassion", desc:"your empathy and humanitarian pull"}
+};
+
+const friendEnemyData = {
+  1: {friends:[1,3,5,6], neutral:[2,7], enemies:[4,8],
+      note:"1 tends to move easily beside 3, 5 and 6 — energies that keep pace without competing for the lead. 4 and 8 can create more friction, since their slower, more rule-bound style can feel like it's blocking your momentum."},
+  2: {friends:[1,2,4,7], neutral:[3,5,9], enemies:[6,8],
+      note:"2 tends to move easily beside 1, 4 and 7 — quieter energies that don't ask you to perform. 6 and 8 can create more friction, since their more forceful or material drive can overwhelm your sensitivity if you're not careful."},
+  3: {friends:[1,3,5,9], neutral:[2,7], enemies:[4,6,8],
+      note:"3 tends to move easily beside 1, 5 and 9 — expressive, expansive energies that grow the way you do. 4, 6 and 8 can create more friction, since their heavier, more restrictive style can feel like it's asking you to shrink."},
+  4: {friends:[1,4,5,8], neutral:[2,7], enemies:[3,6,9],
+      note:"4 tends to move easily beside 1, 5 and 8 — structured or independent energies that respect your need for order. 3, 6 and 9 can create more friction, since their freer, more emotionally expressive style can feel chaotic against your plans."},
+  5: {friends:[1,4,5,6,8], neutral:[2,3,7], enemies:[9],
+      note:"5 gets along with nearly everyone — 1, 4, 6 and 8 in particular share your adaptability. Only 9's all-or-nothing intensity tends to clash with your need to stay light on your feet."},
+  6: {friends:[1,4,5,6], neutral:[2,3,7,9], enemies:[8],
+      note:"6 tends to move easily beside 1, 4 and 5 — energies that appreciate warmth without asking you to be harsh. 8's cooler, results-first drive can feel like it overlooks the care you bring."},
+  7: {friends:[1,2,4,7], neutral:[3,5,6,9], enemies:[8],
+      note:"7 tends to move easily beside 1, 2 and 4 — quieter energies that don't demand constant performance. 8's push for visible results can feel intrusive to your need for privacy and depth."},
+  8: {friends:[4,5,6,8], neutral:[3,7], enemies:[1,2,9],
+      note:"8 tends to move easily beside 4, 5 and 6 — energies that respect discipline and long timelines. 1, 2 and 9 can create more friction at different moments — competing for the lead, needing more reassurance, or chasing ideals faster than you'll move."},
+  9: {friends:[1,3,9], neutral:[2,5,6,7], enemies:[4,8],
+      note:"9 tends to move easily beside 1 and 3 — bold, big-hearted energies that share your urgency for meaning. 4 and 8's slower, more cautious pace can feel like it's holding back what you're trying to finish."}
+};
+
+function friendEnemyFor(lifePathNum){
+  let baseKey = lifePathNum, intro = "";
+  if(lifePathNum === 11){ baseKey = 2; intro = "Because 11 is 2 intensified, the same pattern applies — just louder. "; }
+  if(lifePathNum === 22){ baseKey = 4; intro = "Because 22 is 4 intensified, the same pattern applies — just at a larger scale. "; }
+  const fe = friendEnemyData[baseKey];
+  return {friends:fe.friends, neutral:fe.neutral, enemies:fe.enemies, note: intro + fe.note};
+}
+
+const weekdayRulers = [
+  {day:"Sunday",    planet:"Sun",     number:1},
+  {day:"Monday",    planet:"Moon",    number:2},
+  {day:"Tuesday",   planet:"Mars",    number:9},
+  {day:"Wednesday", planet:"Mercury", number:5},
+  {day:"Thursday",  planet:"Jupiter", number:3},
+  {day:"Friday",    planet:"Venus",   number:6},
+  {day:"Saturday",  planet:"Saturn",  number:8}
+];
+
+function classifyForLifePath(n, fe){
+  if(fe.friends.includes(n)) return "friend";
+  if(fe.enemies.includes(n)) return "enemy";
+  return "neutral";
+}
+
+function bestWorstDates(fe){
+  const friends = [], enemies = [], neutral = [];
+  for(let date=1; date<=31; date++){
+    const n = reduceNum(date, false);
+    const cat = classifyForLifePath(n, fe);
+    if(cat === "friend") friends.push(date);
+    else if(cat === "enemy") enemies.push(date);
+    else neutral.push(date);
+  }
+  return {friends, enemies, neutral};
+}
+
+const spellingExamples = [
+  {name:"Katherine", note:"the full, formal spelling"},
+  {name:"Kathryn", note:"same name, without the extra vowel"},
+  {name:"Kate", note:"the short form"},
+  {name:"Michael", note:"the common spelling"},
+  {name:"Mikael", note:"an alternate spelling of the same name"}
+];
+
+const brandData = {
+  1: {archetype:"Bold first-movers", fits:["Nike","Tesla"], mismatch:"marketing itself as blending in with the crowd rather than leading it"},
+  2: {archetype:"Warm, community-first brands", fits:["Patagonia","IKEA"], mismatch:"aggressive, competitive, flex-first marketing that leaves no room for softness"},
+  3: {archetype:"Playful, expressive brands", fits:["LEGO","Spotify"], mismatch:"rigid, humorless brands that leave no room for personality"},
+  4: {archetype:"Reliable, no-nonsense brands", fits:["Toyota","Muji"], mismatch:"trend-chasing brands that reinvent themselves every season"},
+  5: {archetype:"Adventure and movement brands", fits:["The North Face","Airbnb"], mismatch:"anything demanding a long, rigid contract with no room to change your mind"},
+  6: {archetype:"Nurturing, care-first brands", fits:["Aesop","Le Creuset"], mismatch:"cold, purely utilitarian brands with zero warmth in how they present themselves"},
+  7: {archetype:"Quiet, minimal brands", fits:["Moleskine","Kindle"], mismatch:"loud, attention-hungry brands built entirely around being seen"},
+  8: {archetype:"Prestige, results-driven brands", fits:["Rolex","Mercedes-Benz"], mismatch:"brands leaning entirely on cuteness or nostalgia with no substance behind them"},
+  9: {archetype:"Cause-driven, big-hearted brands", fits:["Ben & Jerry's","TOMS"], mismatch:"brands that feel entirely self-interested with no sense of contributing to anything bigger"},
+  11:{archetype:"Insight-driven, mindful brands", fits:["Headspace","TED"], mismatch:"brands built purely on hype with nothing substantive underneath"},
+  22:{archetype:"Legacy-building, large-vision brands", fits:["SpaceX","Habitat for Humanity"], mismatch:"anything disposable, made to be used once and thrown away"}
+};
+
+// One rulebook for the whole app: the same friend / neutral / enemy table that drives the
+// "Numbers that tend to get along" grid also drives the name checks and compatibility tool.
+function harmonyText(lifePathNum, otherNum){
+  const fe = friendEnemyFor(lifePathNum);
+  const other = reduceNum(otherNum, true);
+  const key = (other === 11) ? 2 : (other === 22 ? 4 : other);
+  if(fe.friends.includes(key)){
+    return {category:"friend", tone:"a friend number, flows smoothly", text:"This number sits comfortably beside your life path \u2014 it should feel like it moves with you rather than against you."};
+  }
+  if(fe.enemies.includes(key)){
+    return {category:"enemy", tone:"tends to create friction", text:"This number sits a little further from your life path's natural register. That's not a red flag \u2014 different energies can round each other out \u2014 but expect it to ask for more patience."};
+  }
+  return {category:"neutral", tone:"mostly neutral", text:"This number neither helps nor hinders your life path much \u2014 the rest of the picture matters more."};
+}
+
+/* ---------------------------------------------------------
+   STORAGE HELPERS (per-viewer, browser-local; app still works without it)
+--------------------------------------------------------- */
+async function storageGet(key){
+  try{
+    return window.localStorage.getItem(key);
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  try{
+    window.localStorage.setItem(key, value);
+    return true;
+  }catch(e){ return false; }
+}
+async function storageDelete(key){
+  try{
+    window.localStorage.removeItem(key);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+let profile = null; // {name, dob}
+
+function fmtDate(d){
+  return d.toLocaleDateString(undefined, {month:'long', day:'numeric', year:'numeric'});
+}
+function titleCase(s){
+  return s.replace(/\s+/g,' ').trim().split(' ').map(w=> w ? w[0].toUpperCase()+w.slice(1).toLowerCase() : w).join(' ');
+}
+
+/* ---------------------------------------------------------
+   RENDER: READING
+--------------------------------------------------------- */
+function computeAll(name, dob, refDate){
+  const lifePathRaw = lifePathRawTotal(dob);
+  const lifePath = reduceNum(lifePathRaw, true);
+  const lifePathKarmic = findKarmicDebt(lifePathRaw);
+  const nameNumRaw = nameToNumber(name);
+  const nameNum = reduceNum(nameNumRaw, true);
+  const nameKarmic = findKarmicDebt(nameNumRaw);
+  const psychic = psychicFromDOB(dob);
+  const py = personalYear(dob, refDate);
+  const loshu = loShuCounts(dob);
+  return {lifePath, nameNum, psychic, py, loshu, lifePathKarmic, nameKarmic};
+}
+
+function renderSpellingExamples(){
+  return spellingExamples.map(ex=>{
+    const n = reduceNum(nameToNumber(ex.name), true);
+    return `<div class="row"><span><span class="rowname">${ex.name}</span> <span class="rownote">— ${ex.note}</span></span><b>${n}</b></div>`;
+  }).join('');
+}
+
+function renderFriendEnemyHTML(lifePathNum){
+  const fe = friendEnemyFor(lifePathNum);
+  const chip = (n, cls) => `<span class="fe-chip ${cls}">${n}</span>`;
+  return `
+    <div class="fe-grid">
+      <div class="fe-col">
+        <div class="fe-label">Flows easily with ${lifePathNum}</div>
+        <div class="chips">${fe.friends.map(n=>chip(n,'friend')).join('')}</div>
+      </div>
+      <div class="fe-col">
+        <div class="fe-label">Mostly neutral</div>
+        <div class="chips">${fe.neutral.map(n=>chip(n,'neutral')).join('')}</div>
+      </div>
+      <div class="fe-col">
+        <div class="fe-label">Tends to create friction</div>
+        <div class="chips">${fe.enemies.map(n=>chip(n,'enemy')).join('')}</div>
+      </div>
+    </div>
+    <p style="margin-top:16px; font-size:13px; color:var(--muted); line-height:1.6;">${fe.note}</p>
+  `;
+}
+
+function renderTraditionsHTML(name, dobStr, lifePathNum, py){
+  const pyth = pythNameNumber(name);
+  const heb = hebrewApproxNumber(name);
+  const hebRaw = (function(){ let s=0; for(const ch of name.toLowerCase()){ if(hebrewApproxMap[ch]) s += hebrewApproxMap[ch]; } return s; })();
+  const chineseCounts = chineseLensForDOB(dobStr);
+  const chineseRows = Object.keys(chineseCounts).sort((a,b)=>Number(a)-Number(b)).map(dStr=>{
+    const d = Number(dStr);
+    const info = chineseDigitMeaning[d];
+    const count = chineseCounts[d];
+    return `<div class="china-row"><b>${d}</b><span class="china-note">${info.note}</span><span class="tag">\u00d7${count}</span></div>`;
+  }).join('');
+  const harmony = harmonyText(lifePathNum, py);
+
+  return `
+    <div class="twin" style="margin-top:4px;">
+      <div class="cell">
+        <h3><span class="num">${pyth}</span>Western (Pythagorean)</h3>
+        <p>The same birth name, run through the letter values most Western numerologists use today. In this tradition, a ${pyth} points to ${numberData[pyth].strength} — the same archetype language this whole app uses, just reached through a different letter table than Chaldean's.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${heb}</span>Hebrew-style gematria</h3>
+        <p>Raw total ${hebRaw}, reduced to a single digit. ${hebrewMeaning[heb]}</p>
+      </div>
+    </div>
+    <p class="subhead" style="margin-top:16px;">The Pythagorean system is named for the Greek mathematician and mystic who first proposed that numbers underlie the structure of reality — it's the version most common in the West today, cycling every letter through 1–9 rather than Chaldean's 1–8 table. Gematria, separately, comes from a Jewish mystical tradition where every Hebrew letter doubles as a number — so a name or word carries a numeric value alongside its meaning, and two words that share a value are traditionally read as spiritually linked. This version is an English-letter approximation, since real gematria works from a name's actual Hebrew spelling — treat it as a loose echo rather than a precise reading.</p>
+
+    <h3 style="margin-top:22px;">Your birth date's digits, through a Chinese lens</h3>
+    <p class="subhead">Chinese numerology cares less about reducing digits down and more about which ones show up at all, based on how they sound when spoken.</p>
+    <div class="china-list" style="margin-top:14px;">${chineseRows}</div>
+
+    <h3 style="margin-top:22px;">This year's energy vs. your core energy</h3>
+    <p>Personal year ${py} and your life path ${lifePathNum}: ${harmony.tone}. ${harmony.text}</p>
+  `;
+}
+
+function wireKuaCheck(dobStr){
+  const birthYear = Number(dobStr.split('-')[0]);
+  document.querySelectorAll('.kua-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.kua-btn').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      const gender = btn.dataset.gender;
+      const kua = kuaNumber(birthYear, gender);
+      const info = kuaData[kua];
+      const result = document.getElementById('kuaResult');
+      result.innerHTML = `Your Kua number is <b style="color:var(--amber);">${kua}</b>, in the <b style="color:var(--paper);">${info.group} group</b>. Traditionally, your most favorable direction to face — for work, sleep, or where you sit — is <b style="color:var(--paper);">${info.direction}</b>.`;
+      result.classList.add('show');
+    });
+  });
+}
+
+
+async function wireFengShuiTool(lifePathNum, dobStr){
+  const panel = document.getElementById('fengShuiPanel');
+  if(!panel) return;
+  // Only exists inside the claude.ai artifact viewer; a plain static host (e.g. Render)
+  // has no window.claude at all, so this must fail silently and hide the panel, not error.
+  if(typeof window.claude === 'undefined' || typeof window.claude.use !== 'function') return;
+
+  let sample;
+  try{
+    sample = await window.claude.use('sample');
+  }catch(e){ return; }
+  if(!sample) return;
+
+  let limits;
+  try{
+    limits = await sample.limits();
+  }catch(e){ return; }
+  if(!limits || !limits.images) return;
+
+  // Only reveal the feature once we've confirmed it can actually run.
+  panel.style.display = 'block';
+  const fileInput = document.getElementById('fengShuiFile');
+  fileInput.accept = limits.images.mediaTypes.join(',');
+
+  const btn = document.getElementById('fengShuiBtn');
+  const result = document.getElementById('fengShuiResult');
+  const lp = numberData[lifePathNum];
+  const birthYear = Number(dobStr.split('-')[0]);
+  const element = elementForYear(birthYear);
+  const kua = kuaData[kuaNumber(birthYear, 'female')]; // direction guidance is the useful part either way
+
+  btn.addEventListener('click', async ()=>{
+    const file = fileInput.files && fileInput.files[0];
+    if(!file){
+      result.style.display = 'block';
+      result.textContent = 'Choose a photo first.';
+      return;
+    }
+    btn.disabled = true;
+    result.style.display = 'block';
+    result.textContent = 'Thinking...';
+
+    const prompt = `You're shown a photo of a room in someone's home. Give a warm, practical feng shui read of this SPECIFIC photo \u2014 call out what you actually see (clutter, furniture placement relative to doors, lighting, what's in the command position, colors present, which of the five elements show up too much or too little) and 2-3 concrete, doable changes that would improve the room's flow. Stay specific to what's visible rather than generic advice.
+
+For light personalization, this person's own numerology: life path ${lifePathNum} (${lp.strength}), Chinese element ${element}, and their feng shui-favorable direction is ${kua.direction} \u2014 mention it only if it's naturally relevant to how the room could be arranged.
+
+Plain language, warm tone, about 150-250 words. No headers or bullet lists \u2014 flowing prose.`;
+
+    try{
+      const { text } = await sample(prompt, {
+        images: file,
+        modelTier: 'default',
+        cache: false,
+        onText: ({text}) => { result.textContent = text; }
+      });
+      result.textContent = text;
+    }catch(e){
+      const messages = {
+        not_granted: "This needs your permission to let the page ask Claude something \u2014 if you declined that prompt, reload and allow it to try again.",
+        images_unavailable: "This view can't send images to Claude right now.",
+        image_rejected: "That file didn't work \u2014 try a JPEG, PNG, WebP, or GIF under 20MB.",
+        rate_limited: "Too many requests right now \u2014 wait a moment and try again.",
+        session_expired: "You'll need to sign back in to claude.ai to use this.",
+        refused: "Claude declined to analyze that image.",
+        empty_completion: "That didn't produce a result \u2014 try a clearer or better-lit photo.",
+        sampling_disabled: "Claude isn't available for this account right now.",
+      };
+      result.textContent = messages[e.code] || (e.text || "Something went wrong \u2014 try again.");
+    }finally{
+      btn.disabled = false;
+    }
+  });
+}
+
+function wireRisingSignTool(dobStr){
+  const precisionBtns = document.querySelectorAll('.time-precision-btn');
+  const exactField = document.getElementById('exactTimeField');
+  const hourField = document.getElementById('hourOnlyField');
+  const locationFields = document.getElementById('locationFields');
+  const locationHelp = document.getElementById('locationHelp');
+  const calcBtn = document.getElementById('risingSignBtn');
+  const result = document.getElementById('risingSignResult');
+  if(!calcBtn) return;
+  let mode = null;
+
+  precisionBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      precisionBtns.forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      mode = btn.dataset.precision;
+      exactField.style.display = (mode === 'exact') ? 'block' : 'none';
+      hourField.style.display = (mode === 'hour') ? 'block' : 'none';
+      locationFields.style.display = 'flex';
+      locationHelp.style.display = 'block';
+      calcBtn.style.display = 'inline-block';
+      result.classList.remove('show');
+    });
+  });
+
+  calcBtn.addEventListener('click', ()=>{
+    const lat = parseFloat(document.getElementById('birthLat').value);
+    const lon = parseFloat(document.getElementById('birthLon').value);
+    const utcOffset = parseFloat(document.getElementById('birthUtcOffset').value);
+    if(isNaN(lat) || isNaN(lon) || isNaN(utcOffset)){
+      result.innerHTML = `Latitude, longitude, and UTC offset all need a number to calculate this.`;
+      result.classList.add('show');
+      return;
+    }
+    if(lat < -90 || lat > 90 || lon < -180 || lon > 180){
+      result.innerHTML = `That latitude or longitude is outside a real range — latitude runs -90 to 90, longitude -180 to 180.`;
+      result.classList.add('show');
+      return;
+    }
+
+    if(mode === 'exact'){
+      const timeVal = document.getElementById('birthTimeInput').value;
+      if(!timeVal){
+        result.innerHTML = `Add a birth time to calculate this.`;
+        result.classList.add('show');
+        return;
+      }
+      const [hh, mm] = timeVal.split(':').map(Number);
+      const deg = ascendantDegree(dobStr, hh, mm, lat, lon, utcOffset);
+      const sign = signForEclipticLongitude(deg);
+      const info = zodiacSignData[sign];
+      result.innerHTML = `Your Rising Sign is <b style="color:var(--amber);">${info.symbol} ${sign}</b>, at ${(deg%30).toFixed(1)}\u00b0 into the sign. Traditionally read as ${info.trait}.`;
+    } else if(mode === 'hour'){
+      const hh = Number(document.getElementById('birthHourSelect').value);
+      const signs = ascendantSignsForHour(dobStr, hh, lat, lon, utcOffset);
+      if(signs.length === 1){
+        const info = zodiacSignData[signs[0]];
+        result.innerHTML = `Across that entire hour, your Ascendant stayed in <b style="color:var(--amber);">${info.symbol} ${signs[0]}</b> \u2014 traditionally read as ${info.trait}. A single hour was enough to pin this down confidently.`;
+      } else {
+        const chips = signs.map(s=>`${zodiacSignData[s].symbol} ${s}`).join(' \u2192 ');
+        result.innerHTML = `Your Ascendant actually moved through more than one sign during that hour: <b style="color:var(--amber);">${chips}</b>. This is exactly the case where narrowing to the real minute would change the answer \u2014 worth tracking down a birth certificate or asking family if this matters to you.`;
+      }
+    } else {
+      result.innerHTML = `Pick whether you know the exact time or just the hour first.`;
+    }
+    result.classList.add('show');
+  });
+}
+
+function renderCyclesHTML(lifePathNum, dobStr, refDate){
+  const stages = computeCycles(dobStr, lifePathNum, refDate);
+  return stages.map(s=>{
+    const pinInfo = numberData[s.pin];
+    const chalText = challengeMeaning[s.chal] !== undefined ? challengeMeaning[s.chal] : challengeMeaning[0];
+    return `
+      <div class="cycle-card ${s.current?'current':''}">
+        <div class="cycle-head">
+          <span class="cycle-stage">${s.label} pinnacle</span>
+          <span class="cycle-age">Ages ${s.range}${s.current?' \u00b7 you are here':''}</span>
+        </div>
+        <div class="cycle-num">${s.pin}</div>
+        <p class="cycle-theme">Leans on your ${pinInfo.strength}.</p>
+        <p class="cycle-challenge"><b>Watch for:</b> ${chalText}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderBestWorstDaysHTML(lifePathNum){
+  const fe = friendEnemyFor(lifePathNum);
+  const weekdayRows = weekdayRulers.map(w=>{
+    const cat = classifyForLifePath(w.number, fe);
+    const label = cat === 'friend' ? 'Best' : (cat === 'enemy' ? 'Toughest' : 'Neutral');
+    return `<div class="china-row"><b style="min-width:78px;">${w.day}</b><span class="china-note">${w.planet} \u00b7 number ${w.number}</span><span class="tag ${cat}">${label}</span></div>`;
+  }).join('');
+  const dates = bestWorstDates(fe);
+  return `
+    <h3 style="margin-top:4px;">Best and toughest days of the week</h3>
+    <p class="subhead">Each day of the week is classically ruled by a planet, which carries its own number \u2014 the same friend/enemy logic from your life path applies here too.</p>
+    <div class="china-list" style="margin-top:14px;">${weekdayRows}</div>
+
+    <h3 style="margin-top:22px;">Best and toughest dates of the month</h3>
+    <p class="subhead">The same logic applied to the calendar date itself, 1 through 31.</p>
+    <div class="meta-row" style="margin-top:12px; flex-direction:column; align-items:flex-start; gap:10px;">
+      <span><b>Best:</b> ${dates.friends.join(', ')}</span>
+      <span><b>Toughest:</b> ${dates.enemies.join(', ')}</span>
+      <span><b>Neutral:</b> ${dates.neutral.join(', ')}</span>
+    </div>
+    <p class="care-note">These repeat every single week and month, forever \u2014 they're the broad pattern. Your Today screen's Personal Day number is the sharper, date-specific version of this same idea; check that each morning rather than just leaning on the weekly pattern alone.</p>
+  `;
+}
+
+function renderColorGuidanceHTML(lifePathNum){
+  const fe = friendEnemyFor(lifePathNum);
+  const ownColor = numberData[lifePathNum].color;
+  const wearColors = fe.friends.filter(n=>n!==lifePathNum).map(n=>numberData[n].color);
+  const avoidColors = fe.enemies.map(n=>numberData[n].color);
+  const wearList = wearColors.length ? wearColors.join(' \u00b7 ') : "nothing beyond your own palette \u2014 your friend numbers already share your color family";
+  const avoidList = avoidColors.length ? avoidColors.join(' \u00b7 ') : "nothing stands out as a clash";
+  return `
+    <h3 style="margin-top:22px;">Colors to lean into</h3>
+    <p>Your own palette \u2014 <b style="color:var(--paper);">${ownColor}</b> \u2014 plus the palettes of your friend numbers: <b style="color:var(--paper);">${wearList}</b>.</p>
+    <h3 style="margin-top:16px;">Colors to go easier on</h3>
+    <p>Drawn from your enemy numbers' palettes: <b style="color:var(--paper);">${avoidList}</b>. Not a ban \u2014 just colors that tend to sit a little further from your natural register, worth reaching for less often rather than never.</p>
+  `;
+}
+
+
+function renderBrandHTML(lifePathNum){
+  const b = brandData[lifePathNum];
+  const fits = b.fits.map(f=>`<span class="brand-chip">${f}</span>`).join('');
+  return `
+    <p class="kicker">Archetype: ${b.archetype}</p>
+    <div class="brand-chips">${fits}</div>
+    <p style="margin-top:14px;">Brands built around ${b.mismatch} tend to feel like a bigger stretch for your energy — not wrong, just less natural.</p>
+    <p class="care-note">This is a playful lens on aesthetic fit, not a claim about any real company — use it to notice what pulls you, not as buying advice.</p>
+  `;
+}
+
+// Case-sensitive letter values: lowercase a-z = 1-26, uppercase A-Z = 27-52.
+// This mirrors the letterology mechanic described in Cue's app — capitalization
+// itself changes the number, unlike the case-insensitive Chaldean system above.
+// Verified against two real Cue output cards for "Meredith Jessica Johnson":
+// title case -> Reduced 6/114, Non-Reduced 6/321; all lowercase -> Reduced 9/99, Non-Reduced 9/243.
+function cueLetterValue(ch){
+  const code = ch.charCodeAt(0);
+  if(code >= 97 && code <= 122) return code - 96;        // a-z -> 1-26
+  if(code >= 65 && code <= 90) return (code - 64) + 26;   // A-Z -> 27-52
+  return 0;
+}
+// "Non-Reduced": sum every letter's raw case-sensitive value, reduce once at the end.
+function cueNonReducedTotal(name){
+  let sum = 0;
+  for(const ch of name){ sum += cueLetterValue(ch); }
+  return sum;
+}
+// "Reduced": reduce each letter's value to a single digit FIRST, then sum those digits.
+function cueReducedTotal(name){
+  let sum = 0;
+  for(const ch of name){
+    const v = cueLetterValue(ch);
+    if(v) sum += reduceNum(v, false);
+  }
+  return sum;
+}
+
+
+function letterology(fullName){
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  let vowelSum = 0, consSum = 0;
+  const parts = words.map(w=>{
+    const letters = [];
+    for(const raw of w){
+      const ch = raw.toLowerCase();
+      if(!chaldeanMap[ch]) continue;
+      const isVowel = 'aeiou'.indexOf(ch) !== -1;
+      const v = chaldeanMap[ch];
+      if(isVowel) vowelSum += v; else consSum += v;
+      letters.push({ch: ch.toUpperCase(), v, isVowel});
+    }
+    return {word:w, letters};
+  }).filter(p=>p.letters.length);
+  const first = parts.length ? parts[0].letters[0] : null;
+  const lastWord = parts.length ? parts[0] : null;
+  const last = lastWord ? lastWord.letters[lastWord.letters.length - 1] : null;
+  return {parts, vowelSum, consSum, first, last};
+}
+
+function renderLetterologyHTML(fullName){
+  const L = letterology(fullName);
+  if(!L.first) return '';
+  const vNum = reduceNum(L.vowelSum, true);
+  const cNum = reduceNum(L.consSum, true);
+  const firstInfo = numberData[L.first.v];
+  const rows = L.parts.map(p=>{
+    const chips = p.letters.map(l=>`<span class="lchip ${l.isVowel?'vowel':''}">${l.ch}<small>${l.v}</small></span>`).join('');
+    return `<div class="letter-word"><div class="letter-word-label">${titleCase(p.word)}</div><div class="letter-row">${chips}</div></div>`;
+  }).join('');
+  return `
+    <div class="letter-words">${rows}</div>
+    <p class="subhead" style="margin-top:12px;">Highlighted letters are vowels; the small number under each letter is its Chaldean value.</p>
+    <div class="twin quad" style="margin-top:18px;">
+      <div class="cell">
+        <h3><span class="num">${L.first.ch}</span>Cornerstone</h3>
+        <p>The first letter of your first name — the approach you lead with, before you've decided how to handle anything. Yours carries a <b style="color:var(--amber);">${L.first.v}</b> — ${firstInfo.strength}.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${L.last.ch}</span>Capstone</h3>
+        <p>The last letter of your first name — how you tend to finish things, once you're actually closing something out. Yours carries a <b style="color:var(--amber);">${L.last.v}</b> — ${numberData[L.last.v].strength}.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${vNum}</span>Soul Urge</h3>
+        <p>Sometimes called the Heart's Desire number — built from your vowels alone, this is what you actually want underneath, whether or not you say it out loud. Total ${L.vowelSum}, reducing to ${vNum}: ${numberData[vNum].strength}.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${cNum}</span>Personality</h3>
+        <p>Built from your consonants alone — the outer shell, what people meet before they actually get to know you. Total ${L.consSum}, reducing to ${cNum}: ${numberData[cNum].strength}.</p>
+      </div>
+    </div>
+    <p class="care-note">Cornerstone, Capstone, Soul Urge, and Personality are standard numerology terms, not something invented for this app — practitioners have used this exact four-way split for a long time. Vowels are A, E, I, O and U; Y is counted as a consonant. Where the Soul Urge and Personality numbers pull in different directions, that's usually the tension people feel between who they are and how they're read.</p>
+  `;
+}
+
+function renderWordLookupResult(word, lifePathNum){
+  const L = letterology(word);
+  if(!L.first){
+    return `<p style="color:var(--muted);">Type in a word, brand, or name with actual letters in it.</p>`;
+  }
+  const raw = nameToNumber(word);
+  const num = reduceNum(raw, true);
+  const vNum = reduceNum(L.vowelSum, true);
+  const cNum = reduceNum(L.consSum, true);
+  const h = harmonyText(lifePathNum, raw);
+  const rows = L.parts.map(p=>{
+    const chips = p.letters.map(l=>`<span class="lchip ${l.isVowel?'vowel':''}">${l.ch}<small>${l.v}</small></span>`).join('');
+    return `<div class="letter-word"><div class="letter-word-label">${titleCase(p.word)}</div><div class="letter-row">${chips}</div></div>`;
+  }).join('');
+  return `
+    <div class="letter-words">${rows}</div>
+    <div class="twin" style="margin-top:16px;">
+      <div class="cell">
+        <h3><span class="num">${num}</span>Overall number</h3>
+        <p>${numberData[num].strength}. Against your own life path: ${h.tone}. ${h.text}</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${L.first.ch}</span>Cornerstone</h3>
+        <p>The opening letter — ${numberData[L.first.v].strength}.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${L.last.ch}</span>Capstone</h3>
+        <p>The closing letter — ${numberData[L.last.v].strength}.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="num">${vNum}</span>Soul Urge</h3>
+        <p>From the vowels alone — ${numberData[vNum].strength}.</p>
+      </div>
+    </div>
+    <p style="margin-top:14px;"><b style="color:var(--paper);">Personality (consonants):</b> ${cNum} — ${numberData[cNum].strength}.</p>
+  `;
+}
+
+function renderCueLetterologyHTML(fullName){
+  const nonReducedRaw = cueNonReducedTotal(fullName);
+  const nonReducedFinal = reduceNum(nonReducedRaw, true);
+  const reducedRaw = cueReducedTotal(fullName);
+  const reducedFinal = reduceNum(reducedRaw, true);
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  const rows = words.map(w=>{
+    const chips = [...w].map(ch=>{
+      const v = cueLetterValue(ch);
+      if(!v) return '';
+      const isUpper = ch === ch.toUpperCase() && ch !== ch.toLowerCase();
+      return `<span class="lchip ${isUpper?'upper':''}">${ch}<small>${v}</small></span>`;
+    }).join('');
+    return `<div class="letter-word"><div class="letter-word-label">${w}</div><div class="letter-row">${chips}</div></div>`;
+  }).join('');
+  return `
+    <p class="subhead">A different mechanic entirely: lowercase a\u2013z run 1\u201326, uppercase A\u2013Z run 27\u201352 \u2014 so unlike the Chaldean system above, capital letters carry real weight of their own, and how you actually style your name changes the number.</p>
+    <div class="letter-words" style="margin-top:14px;">${rows}</div>
+    <p style="margin-top:14px;">As typed:</p>
+    <div class="meta-row" style="margin-top:6px; flex-direction:column; align-items:flex-start; gap:8px;">
+      <span><b>Non-Reduced:</b> ${nonReducedFinal}/${nonReducedRaw} <span style="color:var(--muted); font-size:12.5px;">(sum every letter's value, then reduce once)</span></span>
+      <span><b>Reduced:</b> ${reducedFinal}/${reducedRaw} <span style="color:var(--muted); font-size:12.5px;">(reduce each letter to a single digit first, then sum)</span></span>
+    </div>
+    <details class="namecheck" style="margin-top:16px;">
+      <summary>Try your own capitalization</summary>
+      <div class="inner">
+        <input type="text" id="cueCaseInput" placeholder="Style your name however you'd actually write it">
+        <button class="ghost" id="cueCaseBtn" type="button">Check it</button>
+      </div>
+      <div class="namecheck-result" id="cueCaseResult"></div>
+    </details>
+    <p class="care-note">Both formulas and both figures — Reduced and Non-Reduced — are verified against two real Cue output cards, not guessed. Try ALL CAPS vs. all lowercase above to see the numbers actually move.</p>
+  `;
+}
+
+function renderKarmicBlock(karmicValue, subjectLabel){
+  if(!karmicValue) return '';
+  return `
+    <div class="karmic-note">
+      <p class="kicker">Karmic debt number ${karmicValue}, on your ${subjectLabel}</p>
+      <p>${karmicDebtMeaning[karmicValue]}</p>
+    </div>
+  `;
+}
+
+function generateNameTweaks(fullName){
+  const parts = fullName.trim().split(/\s+/);
+  const first = parts[0] || '';
+  const rest = parts.slice(1).join(' ');
+  if(first.length < 2) return [];
+  const tweaks = [
+    {label:`adding a trailing "${first.slice(-1)}"`, value: first + first.slice(-1) + (rest ? ' '+rest : '')},
+    {label:`adding a silent "h"`, value: first + 'h' + (rest ? ' '+rest : '')},
+    {label:`dropping the last letter`, value: first.slice(0,-1) + (rest ? ' '+rest : '')}
+  ];
+  return tweaks.filter(t => t.value.toLowerCase().trim() !== fullName.toLowerCase().trim());
+}
+
+function renderNameTweaks(fullName, lifePathNum){
+  const tweaks = generateNameTweaks(fullName);
+  if(tweaks.length === 0) return '<p class="subhead">Your first name is too short for a mechanical tweak — try the manual check below instead.</p>';
+  const rows = tweaks.map(t=>{
+    const rawNum = nameToNumber(t.value);
+    const num = reduceNum(rawNum, true);
+    const h = harmonyText(lifePathNum, rawNum);
+    return `<div class="row"><span><span class="rowname">${titleCase(t.value)}</span> <span class="rownote">\u2014 ${t.label}, ${h.tone}</span></span><b>${num}</b></div>`;
+  }).join('');
+  return `<div class="spell-examples" style="margin-top:14px;">${rows}</div>`;
+}
+
+function wireCompatCheck(lifePathNum){
+  const btn = document.getElementById('compatBtn');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const name = document.getElementById('compatNameInput').value.trim();
+    const dateVal = document.getElementById('compatDateInput').value;
+    const result = document.getElementById('compatResult');
+    if(!name && !dateVal) return;
+    const parts = [];
+    if(name){
+      const rawNum = nameToNumber(name);
+      const num = reduceNum(rawNum, true);
+      const h = harmonyText(lifePathNum, rawNum);
+      parts.push(`<b style="color:var(--amber);">${titleCase(name)}</b> carries a name number of <b style="color:var(--amber);">${num}</b> \u2014 ${h.tone}. ${h.text}`);
+    }
+    if(dateVal){
+      const dnum = lifePathFromDOB(dateVal);
+      const h2 = harmonyText(lifePathNum, dnum);
+      parts.push(`That date reduces to <b style="color:var(--amber);">${dnum}</b> \u2014 ${h2.tone}. ${h2.text}`);
+    }
+    result.innerHTML = parts.join(' ');
+    result.classList.add('show');
+  });
+}
+
+function renderAstrologyHTML(dobStr){
+  const [y, m, d] = dobStr.split('-').map(Number);
+  const sign = sunSignForDate(m, d);
+  const info = zodiacSignData[sign];
+
+  const birthYear = y;
+  const animal = zodiacForYear(birthYear);
+  const element = elementForYear(birthYear);
+  const polarity = polarityForYear(birthYear);
+  const trineMates = trineMatesFor(animal).join(' and ');
+  const clash = clashMap[animal];
+  const cyc = elementCycle[element];
+
+  return `
+    <p class="kicker">Western: Sun sign</p>
+    <p class="big-number" style="font-size:44px;">${info.symbol} ${sign}</p>
+    <p>${info.dates}. Traditionally read as ${info.trait}.</p>
+    <div class="meta-row" style="margin-top:14px;">
+      <span><b>Element:</b> ${info.element}</span>
+      <span><b>Modality:</b> ${info.modality}</span>
+      <span><b>Ruling planet:</b> ${info.ruler}</span>
+    </div>
+    <p style="margin-top:14px;">${elementBlurb[info.element]}</p>
+    <p style="margin-top:8px;">${modalityBlurb[info.modality]}</p>
+    <p class="care-note">This is your Sun sign, drawn from your birth date alone — the broadest, most widely known layer of a chart.</p>
+
+    <details class="namecheck" style="margin-top:18px;">
+      <summary>Know your birth time? Find your Rising Sign</summary>
+      <p class="subhead" style="margin-top:10px;">Unlike Sun sign, the Rising Sign (Ascendant) genuinely needs your birth time and location — it's the sign that was coming up over the eastern horizon the moment you were born, and that point moves fast: roughly one zodiac sign every two hours, sometimes faster depending on latitude.</p>
+      <div class="mood-row" style="margin-top:12px;">
+        <button type="button" class="time-precision-btn" data-precision="exact">I know the exact time</button>
+        <button type="button" class="time-precision-btn" data-precision="hour">I only know the hour</button>
+      </div>
+      <div id="exactTimeField" style="display:none; margin-top:14px;">
+        <div class="field"><label for="birthTimeInput">Birth time (local, as on the clock where you were born)</label><input type="time" id="birthTimeInput"></div>
+      </div>
+      <div id="hourOnlyField" style="display:none; margin-top:14px;">
+        <div class="field"><label for="birthHourSelect">Birth hour (local time, the hour you're confident in)</label>
+          <select id="birthHourSelect" style="background:var(--night-3); color:var(--paper); border:1px solid var(--hairline); border-radius:6px; padding:8px; font-family:'Work Sans',sans-serif;">
+            ${Array.from({length:24}).map((_,h)=>`<option value="${h}">${h.toString().padStart(2,'0')}:00 \u2013 ${h.toString().padStart(2,'0')}:59</option>`).join('')}
+          </select>
+        </div>
+        <p class="care-note" style="margin-top:10px;">This is exactly the situation some astrologers estimate from too — rather than pick one guessed minute, this checks every 5 minutes across your whole hour and tells you if the Ascendant stayed in one sign the entire time, or crossed into a second.</p>
+      </div>
+      <div class="tool-form" id="locationFields" style="display:none;">
+        <input type="number" id="birthLat" placeholder="Latitude (e.g. 40.7128)" step="any">
+        <input type="number" id="birthLon" placeholder="Longitude (e.g. -74.0060, west is negative)" step="any">
+        <input type="number" id="birthUtcOffset" placeholder="UTC offset at birth (e.g. -5)" step="0.5">
+      </div>
+      <p class="subhead" id="locationHelp" style="display:none; margin-top:8px;">This app can't look up your coordinates for you — search "[your birth city] latitude longitude" and "[your birth city] UTC offset on [your birth date]" to find these (the offset can differ from today's if that city's time zone rules have changed, or due to daylight saving).</p>
+      <button class="ghost" id="risingSignBtn" type="button" style="margin-top:14px; display:none;">Calculate my Rising Sign</button>
+      <div class="namecheck-result" id="risingSignResult"></div>
+      <p class="care-note" style="margin-top:14px;">This is as far as this app goes into a full natal chart. Where the planets themselves sit — Mercury, Venus, Mars, Jupiter, Saturn — needs a real orbital ephemeris to calculate accurately, and that's a different, much harder problem than the trigonometry behind a Rising Sign. Rather than estimate something that detailed without a way to verify it's actually correct, it's left out.</p>
+    </details>
+
+    <h3 style="margin-top:24px;">Chinese: zodiac, element, and yin-yang</h3>
+    <p style="margin-top:6px;"><b style="color:var(--paper);">${polarity} ${element} ${animal}</b> — the year you were born, in the twelve-year zodiac cycle. Traditionally read as ${zodiacTraits[animal]}.</p>
+    <p class="care-note" style="margin-top:8px; border-top:none; padding-top:0;">The zodiac year runs on the lunar calendar, not January 1st, so if you were born in late January or early-to-mid February, your actual zodiac year could be the one before this.</p>
+
+    <p style="margin-top:16px;"><b style="color:var(--paper);">Yin and yang.</b> ${yinYangGeneral} You were born in a <b style="color:var(--amber);">${polarity}</b> year — ${yinYangExplain[polarity]}</p>
+
+    <p style="margin-top:14px;"><b style="color:var(--paper);">The five elements.</b> Your element is <b style="color:var(--amber);">${element}</b>. In the traditional generating cycle, ${cyc.generatedBy} feeds ${element}, and ${element} in turn feeds ${cyc.generates}. In the controlling cycle, ${element} keeps ${cyc.overcomes} in check, while ${cyc.overcomeBy} keeps ${element} in check — a built-in balance, not a hierarchy.</p>
+
+    <p style="margin-top:14px;"><b style="color:var(--paper);">Compatibility.</b> ${animal} traditionally moves easily alongside ${trineMates} — together the three of you form what's called a trine, sharing a similar rhythm. The traditional clash animal is ${clash}, sitting directly opposite ${animal} in the cycle — not a doom sign, just a pairing that tends to take more deliberate effort.</p>
+
+    <details class="namecheck" style="margin-top:18px;">
+      <summary>Find your Kua number and best direction (feng shui)</summary>
+      <p class="subhead" style="margin-top:10px;">This one traditionally depends on gender as well as birth year — pick whichever applies to you to see it.</p>
+      <div class="mood-row" style="margin-top:10px;">
+        <button type="button" class="kua-btn" data-gender="male">Male</button>
+        <button type="button" class="kua-btn" data-gender="female">Female</button>
+      </div>
+      <div class="namecheck-result" id="kuaResult"></div>
+    </details>
+  `;
+}
+
+function renderReading(){
+  const refDate = new Date();
+  const {lifePath, nameNum, psychic, py, loshu, lifePathKarmic, nameKarmic} = computeAll(profile.name, profile.dob, refDate);
+  const lp = numberData[lifePath];
+  const need = personalYearNeed[py];
+  const positions = [4,9,2,3,5,7,8,1,6];
+
+  const loshuCells = positions.map(n=>{
+    const count = loshu[n];
+    const present = count > 0;
+    const dots = present ? Array.from({length:count}).map(()=>'<i></i>').join('') : '';
+    return `<div class="cell ${present?'present':''}"><div class="n">${n}</div><div class="dots">${dots}</div></div>`;
+  }).join('');
+
+  const loshuLegend = [1,2,3,4,5,6,7,8,9].map(n=>{
+    const m = loShuMeaning[n];
+    const present = loshu[n] > 0;
+    const tagText = present ? "present" : "growth edge";
+    return `<div class="row"><b>${n}</b><span>${m.label} — ${m.desc}<span class="tag">${tagText}</span></span></div>`;
+  }).join('');
+
+  const html = `
+    <div class="stack">
+
+      <div>
+        <p class="hero-line">Your reading</p>
+        <h1 class="headline">${titleCase(profile.name)}</h1>
+        <p class="lede">Born ${fmtDate(new Date(profile.dob+'T00:00:00'))}. Here's what your numbers say about how you're built, what this year is asking of you, and one real thing to do about it.</p>
+      </div>
+
+      <div class="panel">
+        <p class="kicker">Life path — ruled by ${lp.planet}</p>
+        <p class="big-number">${lifePath}</p>
+        <h2>Your core purpose</h2>
+        <p>${lp.purpose}</p>
+        <div class="meta-row">
+          <span><b>Natural strength:</b> ${lp.strength}</span>
+          <span><b>Growth edge:</b> ${lp.growth}</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Understanding your number ${lifePath}, in more depth</h2>
+        <p>${lp.deep}</p>
+
+        <h3 style="margin-top:22px;">How a name's spelling shifts its number</h3>
+        <p class="subhead">Every letter carries a value, so even a small spelling change moves the total. Here's the same idea with a few common names, so you can see it before trying your own below.</p>
+        <div class="spell-examples">${renderSpellingExamples()}</div>
+
+        <h3 style="margin-top:22px;">Numbers that tend to get along with ${lifePath} — and ones that don't</h3>
+        <p class="subhead">In Chaldean tradition, every number has ones it tends to move easily beside, and ones that tend to create friction — sometimes called "enemy numbers." Treat this as a hint to expect a little more patience in a pairing, never as a verdict on a real relationship, friendship, or partner.</p>
+        ${renderFriendEnemyHTML(lifePath)}
+        ${renderKarmicBlock(lifePathKarmic, 'life path')}
+      </div>
+
+      <div class="panel">
+        <h2>Two layers of you</h2>
+        <p>Numerology draws a line between how you come across day to day, and what's quietly steering you underneath. Both are true at once.</p>
+        <div class="twin" style="margin-top:18px;">
+          <div class="cell">
+            <h3><span class="num">${psychic}</span>Psychic number</h3>
+            <p>Drawn from your birth day, this is your instinctive, surface self — how you move through an ordinary day, before you think about it.</p>
+          </div>
+          <div class="cell">
+            <h3><span class="num">${nameNum}</span>Name number</h3>
+            <p>Drawn from your full birth name, this is the deeper pull underneath — the direction your life tends to lean when you're not steering it consciously.</p>
+          </div>
+        </div>
+        ${renderKarmicBlock(nameKarmic, 'name number')}
+        <h3 style="margin-top:22px;">A few small tweaks to your own name</h3>
+        <p class="subhead">This is the actual mechanic behind traditional Chaldean "name correction" — nudging a spelling until its number sits in easier company with your life path. These are mechanical examples to show how it works, not a recommendation to go change your name.</p>
+        ${renderNameTweaks(profile.name, lifePath)}
+        <details class="namecheck">
+          <summary>Or test a spelling of your own</summary>
+          <div class="inner">
+            <input type="text" id="altNameInput" placeholder="Try an alternate spelling of your name">
+            <button class="ghost" id="altNameBtn" type="button">Check it</button>
+          </div>
+          <div class="namecheck-result" id="altNameResult"></div>
+        </details>
+      </div>
+
+      <div class="panel">
+        <h2>Letter by letter</h2>
+        <p>Your name's total is just the sum. Underneath it, four standard numerology figures — Cornerstone, Capstone, Soul Urge, and Personality — each read a different slice of the same letters.</p>
+        ${renderLetterologyHTML(profile.name)}
+      </div>
+
+      <div class="panel">
+        <h2>Case-sensitive letterology</h2>
+        ${renderCueLetterologyHTML(profile.name)}
+      </div>
+
+      <div class="panel need-panel">
+        <p class="kicker">Personal year ${py} · what this year is asking of you</p>
+        <h2>${need.title}</h2>
+        <p>${need.body}</p>
+        <div class="step">
+          <span class="mark">→</span>
+          <p style="margin:0;"><b style="color:var(--paper);">One real thing to do:</b> ${need.step}</p>
+        </div>
+        <p class="care-note">Your personal year is drawn from your birth day and month combined with the current calendar year, so it runs January 1 to December 31 — it resets on New Year's Day, not on your birthday. (Some numerologists instead start the personal year on the birthday itself; this app uses the calendar-year convention, which is the more common approach and easier to track alongside everything else.)</p>
+        <p class="care-note">This is a reflective lens, not a diagnosis of what's actually happening in your life — take what's useful and leave the rest.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Your Lo Shu grid</h2>
+        <p>Built from the digits in your birth date. Filled squares are where your natural strengths already live; empty squares are growth edges, not deficits — places you're still building the muscle.</p>
+        <div class="loshu">${loshuCells}</div>
+        <div class="loshu-legend">${loshuLegend}</div>
+      </div>
+
+      <div class="panel">
+        <h2>Seen through other traditions</h2>
+        <p>Chaldean is one lens on your name and date. Here's how a few other systems read the same two facts about you.</p>
+        ${renderTraditionsHTML(profile.name, profile.dob, lifePath, py)}
+      </div>
+
+      <div class="panel">
+        <h2>A touch of astrology</h2>
+        <p>Numerology and astrology are different disciplines that happen to share a birthday. Two traditions, both read from your birth date — not a number this time, but a season.</p>
+        ${renderAstrologyHTML(profile.dob)}
+      </div>
+
+      <div class="panel" id="fengShuiPanel" style="display:none;">
+        <h2>Feng shui photo read</h2>
+        <p>Upload a photo of a room — this one, or one in a place you're considering — and get an actual read on it: what's in the way, what's working, and what to adjust. Personalized to your own element and favorable direction.</p>
+        <div class="field" style="margin-top:16px;">
+          <label for="fengShuiFile">A photo of the room</label>
+          <input type="file" id="fengShuiFile" accept="image/*">
+        </div>
+        <button class="primary" id="fengShuiBtn" type="button" style="margin-top:14px;">Read this room</button>
+        <div id="fengShuiResult" style="display:none; margin-top:18px; white-space:pre-wrap; font-size:14.5px; line-height:1.65; color:var(--moonlight);"></div>
+        <p class="care-note" style="margin-top:16px;">This only works on the claude.ai version of this app, not a copy hosted elsewhere (like Render) — it calls Claude directly, which only a page opened inside claude.ai itself can do. Nothing about the photo is saved; it's read once for this answer.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Navigating your cycles</h2>
+        <p>Underneath your personal year, your life is also split into four longer chapters called Pinnacles — each with its own number, its own multi-year theme, and its own friction point (the Challenge number) to watch for.</p>
+        ${renderCyclesHTML(lifePath, profile.dob, refDate)}
+        <p class="care-note">Ages are approximate and drawn from your life path number — they mark a general shift in emphasis, not a hard switch on a birthday.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Your best (and toughest) days</h2>
+        ${renderBestWorstDaysHTML(lifePath)}
+      </div>
+
+      <div class="panel">
+        <h2>Matched to your numbers</h2>
+        <div class="swatches">
+          <div class="swatch"><span class="dot" style="background:${lp.swatch}"></span>${lp.color}</div>
+        </div>
+        <div class="meta-row" style="margin-top:16px;">
+          <span><b>Gemstone:</b> ${lp.gem}</span>
+        </div>
+        <p style="margin-top:14px;"><b style="color:var(--paper);">Today's grounding practice:</b> ${lp.practice}</p>
+        ${renderColorGuidanceHTML(lifePath)}
+      </div>
+
+      <div class="panel">
+        <h2>Brand energy</h2>
+        <p>If your surroundings could talk, here's the aesthetic they'd probably lean toward.</p>
+        ${renderBrandHTML(lifePath)}
+
+        <h3 style="margin-top:24px;">Look up any word or brand</h3>
+        <p class="subhead">Run the same letterology lens — Cornerstone, Capstone, Soul Urge, and Personality — against anything. A product name, a company, a word you're weighing.</p>
+        <div class="tool-form">
+          <input type="text" id="wordSearchInput" placeholder="Any word, name, or brand">
+          <button class="ghost" id="wordSearchBtn" type="button">Look it up</button>
+        </div>
+        <div id="wordSearchResult" style="display:none; margin-top:18px;"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Check compatibility with anyone — or anything</h2>
+        <p>Type in a partner, friend, brand, or company — plus a date if you have one, a birthday or a founding date both work — to see how it lines up with your numbers.</p>
+        <div class="tool-form">
+          <input type="text" id="compatNameInput" placeholder="A name — person, brand, or company">
+          <input type="date" id="compatDateInput">
+          <button class="ghost" id="compatBtn" type="button">Check alignment</button>
+        </div>
+        <div class="tool-result" id="compatResult"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Your nearest moons</h2>
+        <p>Two concrete dates to work toward, rather than an open-ended "someday."</p>
+        <div class="moon-row" id="moonRow"></div>
+      </div>
+
+    </div>
+  `;
+
+  document.getElementById('readingRoot').innerHTML = html;
+  renderMoons();
+  wireAltNameCheck(lifePath);
+  wireCueCaseCheck();
+  wireWordSearch(lifePath);
+  wireCompatCheck(lifePath);
+  wireKuaCheck(profile.dob);
+  wireFengShuiTool(lifePath, profile.dob);
+  wireRisingSignTool(profile.dob);
+}
+
+function renderMoons(){
+  const {nextNew, nextFull} = nextMoonEvents(new Date());
+  const lp = numberData[lifePathFromDOB(profile.dob)];
+  const root = document.getElementById('moonRow');
+  if(!root) return;
+  root.innerHTML = `
+    <div class="moon-card">
+      <div class="label">Next new moon</div>
+      <div class="date">${fmtDate(nextNew)}</div>
+      <p>A quiet moment to start something. Set one intention tied to your ${lp.strength}, and write it down somewhere you'll see it again.</p>
+    </div>
+    <div class="moon-card">
+      <div class="label">Next full moon</div>
+      <div class="date">${fmtDate(nextFull)}</div>
+      <p>A natural point to release something. Name one thing connected to your growth edge — ${lp.growth} — that you're ready to loosen your grip on.</p>
+    </div>
+  `;
+}
+
+function wireAltNameCheck(lifePath){
+  const btn = document.getElementById('altNameBtn');
+  const input = document.getElementById('altNameInput');
+  const result = document.getElementById('altNameResult');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const alt = input.value.trim();
+    if(!alt){ return; }
+    const altNum = reduceNum(nameToNumber(alt), true);
+    const h = harmonyText(lifePath, nameToNumber(alt));
+    result.innerHTML = `<b style="color:var(--amber);">${titleCase(alt)}</b> gives a name number of <b style="color:var(--amber);">${altNum}</b> — ${h.tone}. ${h.text}`;
+    result.classList.add('show');
+  });
+}
+
+function wireCueCaseCheck(){
+  const btn = document.getElementById('cueCaseBtn');
+  const input = document.getElementById('cueCaseInput');
+  const result = document.getElementById('cueCaseResult');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const styled = input.value.trim();
+    if(!styled) return;
+    const nrRaw = cueNonReducedTotal(styled);
+    const nrFinal = reduceNum(nrRaw, true);
+    const rRaw = cueReducedTotal(styled);
+    const rFinal = reduceNum(rRaw, true);
+    result.innerHTML = `As styled, <b style="color:var(--amber);">${styled}</b> \u2014 Non-Reduced: <b style="color:var(--amber);">${nrFinal}/${nrRaw}</b>, Reduced: <b style="color:var(--amber);">${rFinal}/${rRaw}</b>.`;
+    result.classList.add('show');
+  });
+}
+
+function wireWordSearch(lifePathNum){
+  const btn = document.getElementById('wordSearchBtn');
+  const input = document.getElementById('wordSearchInput');
+  const result = document.getElementById('wordSearchResult');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const word = input.value.trim();
+    if(!word) return;
+    result.innerHTML = renderWordLookupResult(word, lifePathNum);
+    result.style.display = 'block';
+  });
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); btn.click(); }
+  });
+}
+
+/* ---------------------------------------------------------
+   RENDER: TODAY
+--------------------------------------------------------- */
+function renderToday(){
+  const refDate = new Date();
+  const pd = personalDay(profile.dob, refDate);
+  const info = numberData[pd];
+  const energy = dayEnergy[pd];
+  const html = `
+    <p class="hero-line">Check in</p>
+    <h1 class="headline">Today</h1>
+    <div class="panel today-hero">
+      <div class="date-label">${fmtDate(refDate)}</div>
+      <div class="today-num">${pd}</div>
+      <p style="margin-top:6px;">Your personal day number, ruled by ${info.planet}</p>
+    </div>
+    <div class="panel">
+      <ul class="today-list">
+        <li><b>Focus</b> ${energy.focus}</li>
+        <li><b>Opportunity</b> ${energy.opportunity}</li>
+        <li><b>Pressure</b> ${energy.pressure}</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <ul class="today-list">
+        <li><b>Color</b> ${info.color}</li>
+        <li><b>Stone</b> ${info.gem}</li>
+        <li><b>Today</b> ${info.practice}</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>One line for today</h2>
+      <p>Lean toward your ${info.strength} today, and go easy on yourself around ${info.growth} — that part takes practice, not perfection.</p>
+    </div>
+  `;
+  document.getElementById('todayRoot').innerHTML = html;
+}
+
+/* ---------------------------------------------------------
+   RENDER: JOURNAL
+--------------------------------------------------------- */
+const moods = ['Grounded','Anxious','Tired','Hopeful','Overwhelmed','Steady'];
+let journalEntries = [];
+
+async function loadJournal(){
+  const raw = await storageGet('journal:entries');
+  journalEntries = raw ? JSON.parse(raw) : [];
+}
+
+function renderJournal(){
+  const refDate = new Date();
+  const pd = personalDay(profile.dob, refDate);
+  const moodChips = moods.map(m=>`<button type="button" class="mood-chip" data-mood="${m}">${m}</button>`).join('');
+  const entriesHtml = journalEntries.length
+    ? journalEntries.slice().reverse().map(e=>`
+        <div class="entry">
+          <div class="row1"><span>${e.date}</span><span>Personal day ${e.pd} · ${e.mood || 'unspecified'}</span></div>
+          <p>${e.note}</p>
+        </div>`).join('')
+    : `<div class="empty-state">Nothing logged yet. Your first entry starts the pattern.</div>`;
+
+  const html = `
+    <p class="hero-line">Ongoing</p>
+    <h1 class="headline">Journal</h1>
+    <div class="panel">
+      <h2>Log how you're feeling</h2>
+      <p>Today is personal day ${pd}. A line or two is enough — this is for noticing patterns over time, not writing an essay.</p>
+      <div class="journal-form" style="margin-top:18px;">
+        <div class="mood-row" id="moodRow">${moodChips}</div>
+        <textarea id="journalNote" placeholder="What's actually going on today?"></textarea>
+        <button class="primary" id="saveEntryBtn" type="button" style="align-self:flex-start;">Save entry</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Your entries</h2>
+      <div id="entriesList">${entriesHtml}</div>
+    </div>
+  `;
+  document.getElementById('journalRoot').innerHTML = html;
+  wireJournal(pd);
+}
+
+function wireJournal(pd){
+  let selectedMood = null;
+  document.querySelectorAll('.mood-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.mood-chip').forEach(c=>c.classList.remove('sel'));
+      chip.classList.add('sel');
+      selectedMood = chip.dataset.mood;
+    });
+  });
+  document.getElementById('saveEntryBtn').addEventListener('click', async ()=>{
+    const note = document.getElementById('journalNote').value.trim();
+    if(!note) return;
+    const entry = {date: fmtDate(new Date()), pd, mood: selectedMood, note};
+    journalEntries.push(entry);
+    await storageSet('journal:entries', JSON.stringify(journalEntries));
+    renderJournal();
+  });
+}
+
+/* ---------------------------------------------------------
+   NAVIGATION
+--------------------------------------------------------- */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('#wayfind a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.screen === name);
+  });
+  if(name === 'profile') renderReading();
+  if(name === 'today') renderToday();
+  if(name === 'journal'){ loadJournal().then(renderJournal); }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.getElementById('wayfind').addEventListener('click', (e)=>{
+  const a = e.target.closest('a');
+  if(!a) return;
+  showScreen(a.dataset.screen);
+});
+
+function enterApp(){
+  document.getElementById('topNav').style.display = 'block';
+  document.getElementById('pageFooter').style.display = 'block';
+  showScreen('profile');
+}
+
+document.getElementById('intakeForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('fullName').value.trim();
+  const dob = document.getElementById('dob').value;
+  const err = document.getElementById('formError');
+  err.style.display = 'none';
+  if(!name || !dob){
+    err.textContent = 'Both fields help — add your full name and birth date.';
+    err.style.display = 'block';
+    return;
+  }
+  const dobDate = new Date(dob+'T00:00:00');
+  if(isNaN(dobDate.getTime()) || dobDate > new Date()){
+    err.textContent = "That birth date doesn't look quite right — mind checking it?";
+    err.style.display = 'block';
+    return;
+  }
+  profile = {name, dob};
+  try{ await storageSet('profile:data', JSON.stringify(profile)); }catch(e){ /* non-fatal */ }
+  enterApp();
+});
+
+document.getElementById('editInfoBtn').addEventListener('click', async ()=>{
+  await storageDelete('profile:data');
+  profile = null;
+  document.getElementById('topNav').style.display = 'none';
+  document.getElementById('pageFooter').style.display = 'none';
+  document.getElementById('fullName').value = '';
+  document.getElementById('dob').value = '';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-input').classList.add('active');
+});
+
+/* ---------------------------------------------------------
+   BOOT
+--------------------------------------------------------- */
+(async function boot(){
+  const raw = await storageGet('profile:data');
+  if(raw){
+    try{
+      profile = JSON.parse(raw);
+      enterApp();
+    }catch(e){ /* fall through to input screen */ }
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
