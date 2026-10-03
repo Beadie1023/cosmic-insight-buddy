@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep the original Footing single-file app isolated at `/footing.html` and present it through `/`; this preserves its verified calculations, copy, styling, and browser-local persistence without semantic drift.
