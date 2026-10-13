@@ -682,6 +682,7 @@
       <a data-screen="profile">Your reading</a>
       <a data-screen="today">Today</a>
       <a data-screen="journal">Journal</a>
+      <a data-screen="fengshui">Feng Shui</a>
     </nav>
   </div>
 </header>
@@ -723,6 +724,11 @@
   <!-- JOURNAL SCREEN -->
   <section class="screen" id="screen-journal">
     <div id="journalRoot"></div>
+  </section>
+
+  <!-- FENG SHUI SCREEN -->
+  <section class="screen" id="screen-fengshui">
+    <div id="fengShuiRoot"></div>
   </section>
 
 </div>
@@ -1560,6 +1566,103 @@ Plain language, warm tone, about 150-250 words. No headers or bullet lists \u201
   });
 }
 
+/* ---------------------------------------------------------
+   FENG SHUI TAB — room photo read via the app's own server
+--------------------------------------------------------- */
+function renderFengShuiScreen(){
+  const root = document.getElementById('fengShuiRoot');
+  if(!profile){ root.innerHTML = ''; return; }
+  const dob = profile.dob;
+  const birthYear = Number(dob.split('-')[0]);
+  const lifePathNum = lifePathFromDOB(dob);
+  const element = elementForYear(birthYear);
+  const savedGender = (function(){ try{ return window.localStorage.getItem('fengshui:gender'); }catch(e){ return null; } })();
+  root.innerHTML = `
+    <p class="hero-line">Feng shui</p>
+    <h1 class="headline">Read a room.</h1>
+    <p class="lede">Upload a photo of a room and get a practical read on how to arrange it — using your Kua directions, the five elements of your birth year, the Bagua life areas, and the commanding position.</p>
+    <div class="panel">
+      <h2>Your feng shui footing</h2>
+      <p>Life path <b style="color:var(--amber);">${lifePathNum}</b> · Chinese element <b style="color:var(--paper);">${element}</b></p>
+      <p class="subhead" style="margin-top:10px;">Kua directions traditionally depend on gender as well as birth year — pick whichever applies to you.</p>
+      <div class="mood-row" style="margin-top:10px;">
+        <button type="button" class="kua-btn fs-gender${savedGender==='male'?' sel':''}" data-gender="male">Male</button>
+        <button type="button" class="kua-btn fs-gender${savedGender==='female'?' sel':''}" data-gender="female">Female</button>
+      </div>
+      <div class="namecheck-result" id="fsKua"></div>
+    </div>
+    <div class="panel">
+      <h2>Room photo</h2>
+      <div class="field" style="margin-top:12px;">
+        <label for="fsRoom">Which room is this?</label>
+        <input type="text" id="fsRoom" placeholder="Bedroom, home office, living room…" autocomplete="off">
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label for="fsDoor">Which way does the main door face? (optional)</label>
+        <input type="text" id="fsDoor" placeholder="e.g. North, or 'not sure'" autocomplete="off">
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label for="fsFile">A photo of the room</label>
+        <input type="file" id="fsFile" accept="image/jpeg,image/png,image/webp,image/gif">
+      </div>
+      <button class="primary" id="fsBtn" type="button" style="margin-top:14px;">Read this room</button>
+      <div id="fsResult" style="display:none; margin-top:18px; white-space:pre-wrap; font-size:14.5px; line-height:1.65; color:var(--moonlight);"></div>
+      <p class="care-note" style="margin-top:16px;">The photo is sent once to be read and isn't saved anywhere.</p>
+    </div>`;
+
+  let gender = savedGender;
+  const kuaOut = document.getElementById('fsKua');
+  function showKua(){
+    if(!gender) return;
+    const k = kuaNumber(birthYear, gender);
+    const info = kuaData[k];
+    kuaOut.innerHTML = `Kua <b style="color:var(--amber);">${k}</b>, ${info.group} group — your best direction is <b style="color:var(--paper);">${info.direction}</b>.`;
+    kuaOut.classList.add('show');
+  }
+  showKua();
+  root.querySelectorAll('.fs-gender').forEach(b=>b.addEventListener('click', ()=>{
+    root.querySelectorAll('.fs-gender').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); gender = b.dataset.gender;
+    try{ window.localStorage.setItem('fengshui:gender', gender); }catch(e){}
+    showKua();
+  }));
+
+  const btn = document.getElementById('fsBtn');
+  const result = document.getElementById('fsResult');
+  btn.addEventListener('click', async ()=>{
+    const file = document.getElementById('fsFile').files[0];
+    result.style.display = 'block';
+    if(!gender){ result.textContent = 'Pick Male or Female above first, so the directions are right.'; return; }
+    if(!file){ result.textContent = 'Choose a photo first.'; return; }
+    if(file.size > 15*1024*1024){ result.textContent = 'That photo is too large — try one under 15MB.'; return; }
+    btn.disabled = true;
+    result.textContent = 'Looking at your room…';
+    try{
+      const image = await new Promise((res, rej)=>{ const r = new FileReader(); r.onload = ()=>res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+      const k = kuaNumber(birthYear, gender);
+      const resp = await fetch('/api/fengshui', {
+        method:'POST', headers:{'content-type':'application/json'},
+        body: JSON.stringify({
+          image, room: document.getElementById('fsRoom').value.trim(),
+          door: document.getElementById('fsDoor').value.trim(),
+          lifePath: lifePathNum, lifePathStrength: (numberData[lifePathNum]||{}).strength || '',
+          element, kua: k, kuaGroup: kuaData[k].group, kuaDirection: kuaData[k].direction
+        })
+      });
+      if(!resp.ok || !resp.body){
+        let msg = 'Something went wrong — try again.';
+        try{ const j = await resp.json(); if(j.error) msg = j.error; }catch(e){}
+        result.textContent = msg; return;
+      }
+      const reader = resp.body.getReader(); const dec = new TextDecoder(); let text = '';
+      while(true){ const {done, value} = await reader.read(); if(done) break; text += dec.decode(value, {stream:true}); result.textContent = text; }
+      if(!text.trim()) result.textContent = "That didn't produce a result — try a clearer or better-lit photo.";
+    }catch(e){
+      result.textContent = 'Something went wrong — try again.';
+    }finally{ btn.disabled = false; }
+  });
+}
+
 function wireRisingSignTool(dobStr){
   const precisionBtns = document.querySelectorAll('.time-precision-btn');
   const exactField = document.getElementById('exactTimeField');
@@ -2377,6 +2480,7 @@ function showScreen(name){
   });
   if(name === 'profile') renderReading();
   if(name === 'today') renderToday();
+  if(name === 'fengshui') renderFengShuiScreen();
   if(name === 'journal'){ loadJournal().then(renderJournal); }
   window.scrollTo({top:0, behavior:'smooth'});
 }
