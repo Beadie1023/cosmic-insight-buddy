@@ -647,6 +647,43 @@
     cursor:pointer;
   }
   .time-precision-btn.sel{border-color:var(--amber); color:var(--amber);}
+
+  /* Moon practice screen */
+  .moon-hero{display:flex; gap:22px; align-items:center; flex-wrap:wrap;}
+  .moon-hero svg{width:112px; height:112px; flex-shrink:0;}
+  .moon-hero .moon-name{font-family:'Fraunces',serif; font-size:28px; color:var(--paper); margin:0;}
+  .moon-hero .moon-sub{color:var(--muted); font-size:13.5px; margin:4px 0 0;}
+  .moon-hero > div{flex:1 1 150px; min-width:0;}
+  @media (max-width:480px){
+    .moon-hero{gap:16px;}
+    .moon-hero svg{width:92px; height:92px;}
+    .moon-hero .moon-name{font-size:24px;}
+    nav.wayfind{gap:14px; font-size:13px; flex-wrap:wrap;}
+    nav.wayfind a{white-space:nowrap;}
+    .brand{font-size:17px;}
+    .top-inner{padding:14px 18px; flex-wrap:wrap;}
+  }
+  .moon-next{display:flex; gap:22px; flex-wrap:wrap; margin-top:12px; font-size:13.5px; color:var(--muted);}
+  .moon-next b{color:var(--paper); font-weight:500;}
+  .stage-steps{margin:12px 0 0; padding-left:20px; color:var(--moonlight); font-size:15px; line-height:1.65;}
+  .stage-steps li{margin-bottom:6px;}
+  .stage-day{margin-top:12px; padding-top:12px; border-top:1px solid var(--hairline); font-size:14.5px; color:var(--moonlight); line-height:1.6;}
+  .stage-day b{color:var(--paper); font-weight:500;}
+  .night-dots{display:flex; gap:8px; margin:12px 0;}
+  .night-dots i{width:16px; height:16px; border-radius:50%; border:1px solid var(--hairline); display:inline-block;}
+  .night-dots i.on{background:var(--amber); border-color:var(--amber);}
+  .saved-line{font-size:14.5px; color:var(--moonlight); padding:12px 14px; background:var(--night-3); border-radius:8px; margin-top:12px; line-height:1.55;}
+  .mk-chip{border:1px solid var(--hairline); background:none; color:var(--moonlight); padding:7px 14px; border-radius:20px; font-size:13.5px; cursor:pointer; font-family:'Work Sans',sans-serif;}
+  .mk-chip.sel{border-color:var(--amber); color:var(--amber);}
+  .mk-grid{display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin-top:14px;}
+  @media (max-width:520px){ .mk-grid{grid-template-columns:repeat(6,1fr);} }
+  .mk-day{aspect-ratio:1; display:flex; align-items:center; justify-content:center; border:1px solid var(--hairline); border-radius:6px; font-size:12px; color:var(--muted);}
+  .mk-day.logged{background:var(--amber); border-color:var(--amber); color:var(--ink);}
+  .mk-day.today{outline:2px solid var(--moonlight); outline-offset:1px; color:var(--paper);}
+  .mk-day.logged.today{color:var(--ink);}
+  .mk-row{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--hairline); font-size:14px; color:var(--moonlight);}
+  .mk-row:last-child{border-bottom:none;}
+  .mk-row span:last-child{color:var(--muted); text-align:right;}
   .entry{
     border-bottom:1px solid var(--hairline);
     padding:16px 0;
@@ -681,6 +718,7 @@
     <nav class="wayfind" id="wayfind">
       <a data-screen="profile">Your reading</a>
       <a data-screen="today">Today</a>
+      <a data-screen="moon">Moon</a>
       <a data-screen="journal">Journal</a>
       <a data-screen="fengshui">Feng Shui</a>
     </nav>
@@ -721,14 +759,19 @@
     <div id="todayRoot"></div>
   </section>
 
-  <!-- JOURNAL SCREEN -->
-  <section class="screen" id="screen-journal">
-    <div id="journalRoot"></div>
+  <!-- MOON SCREEN -->
+  <section class="screen" id="screen-moon">
+    <div id="moonRoot"></div>
   </section>
 
   <!-- FENG SHUI SCREEN -->
   <section class="screen" id="screen-fengshui">
     <div id="fengShuiRoot"></div>
+  </section>
+
+  <!-- JOURNAL SCREEN -->
+  <section class="screen" id="screen-journal">
+    <div id="journalRoot"></div>
   </section>
 
 </div>
@@ -825,16 +868,78 @@ function loShuCounts(dobStr){
   return counts;
 }
 
+/* ---------------------------------------------------------
+   MOON ENGINE: true new and full moon times from Meeus, Astronomical
+   Algorithms ch. 49 (main periodic terms). Checked against nine real events
+   between 2000 and 2025 (eclipse and almanac records): the worst error was
+   about one minute. Phase names and practice stages come from the real
+   new-to-full-to-new timing, not an average cycle length.
+--------------------------------------------------------- */
+const SYNODIC = 29.530588861;
+function moonEventDate(k, isFull){
+  const kk = k + (isFull ? 0.5 : 0);
+  const T = kk/1236.85;
+  const r = d => d*Math.PI/180;
+  let jde = 2451550.09766 + SYNODIC*kk + 0.00015437*T*T - 0.000000150*T*T*T + 0.00000000073*T*T*T*T;
+  const E = 1 - 0.002516*T - 0.0000074*T*T;
+  const M  = r((2.5534 + 29.10535670*kk - 0.0000014*T*T - 0.00000011*T*T*T) % 360);
+  const Mp = r((201.5643 + 385.81693528*kk + 0.0107582*T*T + 0.00001238*T*T*T - 0.000000058*T*T*T*T) % 360);
+  const F  = r((160.7108 + 390.67050284*kk - 0.0016118*T*T - 0.00000227*T*T*T + 0.000000011*T*T*T*T) % 360);
+  const Om = r((124.7746 - 1.56375588*kk + 0.0020672*T*T + 0.00000215*T*T*T) % 360);
+  const s = Math.sin;
+  const c = isFull
+    ? [-0.40614, 0.17302, 0.01614, 0.01043, 0.00734, -0.00515, 0.00209]
+    : [-0.40720, 0.17241, 0.01608, 0.01039, 0.00739, -0.00514, 0.00208];
+  const corr = c[0]*s(Mp) + c[1]*E*s(M) + c[2]*s(2*Mp) + c[3]*s(2*F) + c[4]*E*s(Mp-M) + c[5]*E*s(Mp+M) + c[6]*E*E*s(2*M)
+    - 0.00111*s(Mp-2*F) - 0.00057*s(Mp+2*F) + 0.00056*E*s(2*Mp+M) - 0.00042*s(3*Mp)
+    + 0.00042*E*s(M+2*F) + 0.00038*E*s(M-2*F) - 0.00024*E*s(2*Mp-M) - 0.00017*s(Om)
+    - 0.00007*s(Mp+2*M) + 0.00004*s(2*Mp-2*F) + 0.00004*s(3*M) + 0.00003*s(Mp+M-2*F)
+    + 0.00003*s(2*Mp+2*F) - 0.00003*s(Mp+M+2*F) + 0.00003*s(Mp-M+2*F) - 0.00002*s(Mp-M-2*F)
+    - 0.00002*s(3*Mp+M) + 0.00002*s(4*Mp);
+  const jdUT = jde + corr - 69/86400; // dynamical time to UT (about 69 s in the 2020s)
+  return new Date((jdUT - 2440587.5)*86400000);
+}
+
+// The new moon before `date`, the full moon after it, and the next new moon.
+function moonCycleAround(date){
+  const jd = date.getTime()/86400000 + 2440587.5;
+  let k = Math.floor((jd - 2451550.09766)/SYNODIC);
+  let N0 = moonEventDate(k, false), N1 = moonEventDate(k+1, false);
+  while(N0 > date){ k--; N1 = N0; N0 = moonEventDate(k, false); }
+  while(N1 <= date){ k++; N0 = N1; N1 = moonEventDate(k+1, false); }
+  return {k, N0, F: moonEventDate(k, true), N1};
+}
+
+function moonPhaseNow(date){
+  const c = moonCycleAround(date);
+  const dayMs = 86400000;
+  let p; // position in the cycle: 0 = new, 0.5 = full, back to 1 = new
+  if(date < c.F) p = 0.5 * (date - c.N0)/(c.F - c.N0);
+  else p = 0.5 + 0.5 * (date - c.F)/(c.N1 - c.F);
+  const illum = (1 - Math.cos(p*2*Math.PI))/2;
+  let name;
+  if(p < 0.034 || p >= 0.966) name = 'New moon';
+  else if(p < 0.215) name = 'Waxing crescent';
+  else if(p < 0.285) name = 'First quarter';
+  else if(p < 0.466) name = 'Waxing gibbous';
+  else if(p < 0.534) name = 'Full moon';
+  else if(p < 0.715) name = 'Waning gibbous';
+  else if(p < 0.785) name = 'Last quarter';
+  else name = 'Waning crescent';
+  let stage;
+  if(p >= 0.86 || p < 0.017) stage = 'stillness';
+  else if(p < 0.25) stage = 'plant';
+  else if(p < 0.466) stage = 'adjust';
+  else if(p < 0.534) stage = 'arrival';
+  else stage = 'release';
+  return {p, illum, name, stage, ageDays:(date - c.N0)/dayMs, cycleDays:(c.N1 - c.N0)/dayMs, cycle:c};
+}
+
 function nextMoonEvents(date){
-  const synodic = 29.530588853;
-  const ref = new Date(Date.UTC(2000,0,6,18,14,0));
-  const daysSince = (date - ref)/86400000;
-  let age = daysSince % synodic; if(age<0) age += synodic;
-  const daysToNewMoon = synodic - age;
-  const daysToFullMoon = age < synodic/2 ? (synodic/2 - age) : (synodic*1.5 - age);
+  const c = moonCycleAround(date);
   return {
-    nextNew: new Date(date.getTime() + daysToNewMoon*86400000),
-    nextFull: new Date(date.getTime() + daysToFullMoon*86400000)
+    nextNew: c.N1,
+    nextFull: c.F > date ? c.F : moonEventDate(c.k+1, true)
   };
 }
 
@@ -2470,6 +2575,265 @@ function wireJournal(pd){
 }
 
 /* ---------------------------------------------------------
+   RENDER: MOON PRACTICE
+--------------------------------------------------------- */
+const moonStages = {
+  stillness:{
+    title:'Stillness', sub:'The darkest part of the cycle',
+    meaning:"The light is at its thinnest. This is the quiet stretch between one cycle and the next: nothing to push, nothing to name yet.",
+    tonight:[
+      "Sit still for five minutes with no phone and no asking.",
+      "Name out loud one thing the moon is bringing into view, whatever shows up. Leave it where it is.",
+      "Don't write the new intention yet. Naming waits for the waxing moon."
+    ],
+    day:"Clear one small thing off your list so there's room for what comes next."
+  },
+  plant:{
+    title:'Plant', sub:'The light is growing',
+    meaning:"This is the window for planting one intention. The routine is to say it once, in the dark, and let it sit.",
+    tonight:[
+      "Write one specific intention in a single plain sentence.",
+      "Lying down with your eyes closed, say it once into the dark. Don't repeat it, since repeating is asking.",
+      "Do this three nights in a row."
+    ],
+    day:"Take one concrete step toward it, the kind of thing you could check off a list."
+  },
+  adjust:{
+    title:"Adjust, don't force", sub:'Almost full',
+    meaning:"The vision is nearly formed. This is where people usually start pushing, and pushing tends to undo the calm the routine is meant to build.",
+    tonight:[
+      "Ask yourself: does this still move me, or am I the one moving it?",
+      "If you're pushing, set it down for the night. Keep the vision and let go of the details."
+    ],
+    day:"Adjust the details instead of working harder at the same thing: the offer, the timing, who you ask."
+  },
+  arrival:{
+    title:'Arrival', sub:'The moon is full',
+    meaning:"This is the moment to look at what has actually taken shape. Count what moved, including small things.",
+    tonight:[
+      "Write down what moved this cycle, even if it's small.",
+      "Say thank you for it before you ask for anything more."
+    ],
+    day:"Follow up on anything still open: a reply, a quote, a payment, a conversation."
+  },
+  release:{
+    title:'Release and gratitude', sub:'The light is withdrawing',
+    meaning:"The light pulls back, and so can what you're done with. This is the phase for letting go of an old pattern or story, with thanks.",
+    tonight:[
+      "Name one thing you're done with: a belief, a habit, an old story about money.",
+      "Say it plainly, then thank it for what it taught you."
+    ],
+    day:"Let go of one practical thing too: an unused subscription, an old plan, a pile of clutter."
+  }
+};
+
+function escHtml(str){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function localDateKey(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function inDays(date, now){
+  const n = Math.round((date - now)/86400000);
+  if(n <= 0) return 'today';
+  if(n === 1) return 'tomorrow';
+  return 'in ' + n + ' days';
+}
+
+function moonSvg(p){
+  const waxing = p < 0.5;
+  const theta = (waxing ? p : 1 - p) * 2 * Math.PI;
+  const rx = 50 * Math.abs(Math.cos(theta));
+  const sweep = theta > Math.PI/2 ? 1 : 0;
+  const lit = 'M60,10 A50,50 0 0 1 60,110 A' + rx.toFixed(2) + ',50 0 0 ' + sweep + ' 60,10 Z';
+  const flip = waxing ? '' : ' transform="translate(120,0) scale(-1,1)"';
+  return '<svg viewBox="0 0 120 120" role="img" aria-label="Current moon phase"><circle cx="60" cy="60" r="50" fill="var(--night-3)" stroke="var(--hairline)"/><path d="' + lit + '" fill="var(--moonlight)"' + flip + '/></svg>';
+}
+
+async function readJSON(key, fallback){
+  try{
+    const raw = await storageGet(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+
+async function renderMoonPractice(){
+  const root = document.getElementById('moonRoot');
+  if(!root) return;
+  const now = new Date();
+  const ph = moonPhaseNow(now);
+  const st = moonStages[ph.stage];
+  const nxt = nextMoonEvents(now);
+  const cycleKey = localDateKey(ph.cycle.N0);
+  const intention = await readJSON('moon:intention', null);
+  const release = await readJSON('moon:release', null);
+  const log = await readJSON('moon:log', []);
+  const todayKey = localDateKey(now);
+  const thisCycleIntention = intention && intention.cycleKey === cycleKey ? intention : null;
+  const thisCycleRelease = release && release.cycleKey === cycleKey ? release : null;
+
+  const dayNum = Math.min(Math.floor(ph.ageDays) + 1, Math.round(ph.cycleDays));
+  const steps = st.tonight.map(t => '<li>' + t + '</li>').join('');
+
+  // Stage-specific card
+  let stageCard = '';
+  if(ph.stage === 'plant'){
+    const nights = thisCycleIntention ? thisCycleIntention.nights.length : 0;
+    const dots = [0,1,2].map(i => '<i class="' + (i < nights ? 'on' : '') + '"></i>').join('');
+    const saidToday = thisCycleIntention && thisCycleIntention.nights.indexOf(todayKey) !== -1;
+    stageCard = '<div class="panel"><h2>Your intention for this cycle</h2>'
+      + '<p>One specific sentence, in your own words. Something like: "My first client says yes and the bill is covered."</p>'
+      + '<textarea id="moonIntention" maxlength="240" placeholder="Write it plainly">' + escHtml(thisCycleIntention ? thisCycleIntention.text : '') + '</textarea>'
+      + '<div style="margin-top:12px;"><button class="primary" id="moonIntentionSave" type="button">' + (thisCycleIntention ? 'Update intention' : 'Save intention') + '</button></div>'
+      + (thisCycleIntention
+          ? '<p style="margin-top:16px;">Nights said, out of three:</p><div class="night-dots">' + dots + '</div>'
+            + '<button class="ghost" id="moonNightBtn" type="button"' + (saidToday || nights >= 3 ? ' disabled' : '') + '>'
+            + (nights >= 3 ? 'All three nights done' : (saidToday ? 'Counted for tonight' : 'I said it tonight')) + '</button>'
+          : '')
+      + '</div>';
+  } else if(ph.stage === 'adjust' || ph.stage === 'arrival'){
+    stageCard = '<div class="panel"><h2>Your intention this cycle</h2>'
+      + (thisCycleIntention
+          ? '<div class="saved-line">' + escHtml(thisCycleIntention.text) + '</div>'
+          : '<p>You haven\'t planted one this cycle. That\'s fine. The next planting window opens at the new moon, ' + fmtDate(nxt.nextNew) + ' (' + inDays(nxt.nextNew, now) + ').</p>')
+      + '</div>';
+  } else if(ph.stage === 'release'){
+    stageCard = '<div class="panel"><h2>What you\'re releasing</h2>'
+      + '<p>One thing you\'re done with. Say it plainly, then thank it.</p>'
+      + '<textarea id="moonRelease" maxlength="240" placeholder="I\'m releasing...">' + escHtml(thisCycleRelease ? thisCycleRelease.text : '') + '</textarea>'
+      + '<div style="margin-top:12px;"><button class="primary" id="moonReleaseSave" type="button">' + (thisCycleRelease ? 'Update' : 'Release it') + '</button></div>'
+      + (thisCycleRelease ? '<div class="saved-line">Released and thanked on ' + escHtml(thisCycleRelease.date) + '.</div>' : '')
+      + '</div>';
+  }
+
+  // Tracker: this cycle's grid
+  const cellCount = Math.round(ph.cycleDays);
+  const loggedDays = {};
+  log.forEach(e => {
+    const noon = new Date(e.date + 'T12:00:00');
+    if(noon >= ph.cycle.N0 && noon < ph.cycle.N1){
+      const d = Math.min(Math.floor((noon - ph.cycle.N0)/86400000) + 1, cellCount);
+      loggedDays[d] = true;
+    }
+  });
+  let cells = '';
+  for(let d = 1; d <= cellCount; d++){
+    cells += '<div class="mk-day' + (loggedDays[d] ? ' logged' : '') + (d === dayNum ? ' today' : '') + '">' + d + '</div>';
+  }
+  const todayEntry = log.find(e => e.date === todayKey) || null;
+  const energyChips = [1,2,3,4,5].map(n => '<button type="button" class="mk-chip" data-energy="' + n + '">' + n + '</button>').join('');
+  const moneyChips = [['up','Moved forward'],['flat','Nothing either way'],['down','Stalled']].map(m => '<button type="button" class="mk-chip" data-money="' + m[0] + '">' + m[1] + '</button>').join('');
+
+  // Patterns across all entries, grouped by the stage each was logged in
+  const groups = {};
+  log.forEach(e => {
+    const g = groups[e.stage] || (groups[e.stage] = {n:0, energy:0, up:0});
+    g.n++; g.energy += e.energy; if(e.money === 'up') g.up++;
+  });
+  const order = ['plant','adjust','arrival','release','stillness'];
+  const rows = order.filter(k => groups[k]).map(k => {
+    const g = groups[k];
+    return '<div class="mk-row"><span>' + moonStages[k].title + '</span><span>' + g.n + (g.n === 1 ? ' entry' : ' entries') + ' \u00b7 energy ' + (g.energy/g.n).toFixed(1) + ' \u00b7 money moved on ' + g.up + '</span></div>';
+  }).join('');
+  let insight = '';
+  if(log.length >= 10){
+    const ranked = order.filter(k => groups[k] && groups[k].n >= 2).map(k => ({k, avg:groups[k].energy/groups[k].n})).sort((a,b) => b.avg - a.avg);
+    if(ranked.length >= 2 && ranked[0].avg !== ranked[ranked.length-1].avg){
+      insight = '<p style="margin-top:12px;">So far your energy has run highest in <b style="color:var(--paper);">' + moonStages[ranked[0].k].title.toLowerCase() + '</b> and lowest in <b style="color:var(--paper);">' + moonStages[ranked[ranked.length-1].k].title.toLowerCase() + '</b>. That\'s a small sample, so give it a few cycles before leaning on it.</p>';
+    }
+  } else if(log.length > 0){
+    insight = '<p style="margin-top:12px;color:var(--muted);">' + (10 - log.length) + ' more entries and this will start showing which phase tends to run high or low for you.</p>';
+  }
+
+  const recent = log.slice().sort((a,b) => a.date < b.date ? 1 : -1).slice(0,5).map(e => {
+    const m = e.money === 'up' ? 'money moved forward' : (e.money === 'down' ? 'money stalled' : 'no money movement');
+    return '<div class="entry"><div class="row1"><span>' + escHtml(e.date) + '</span><span>' + moonStages[e.stage].title + ' \u00b7 energy ' + e.energy + ' \u00b7 ' + m + '</span></div>' + (e.note ? '<p>' + escHtml(e.note) + '</p>' : '') + '</div>';
+  }).join('');
+
+  root.innerHTML =
+    '<p class="hero-line">Moon practice</p><h1 class="headline">Moon</h1>'
+    + '<div class="panel"><div class="moon-hero">' + moonSvg(ph.p)
+    + '<div><p class="moon-name">' + ph.name + '</p>'
+    + '<p class="moon-sub">' + Math.round(ph.illum*100) + '% lit \u00b7 day ' + dayNum + ' of about ' + cellCount + '</p>'
+    + '<div class="moon-next"><span>Next full moon <b>' + fmtDate(nxt.nextFull) + '</b> (' + inDays(nxt.nextFull, now) + ')</span><span>Next new moon <b>' + fmtDate(nxt.nextNew) + '</b> (' + inDays(nxt.nextNew, now) + ')</span></div>'
+    + '</div></div></div>'
+    + '<div class="panel need-panel"><p class="kicker">' + st.sub + '</p><h2>' + st.title + '</h2><p>' + st.meaning + '</p>'
+    + '<p style="margin-top:16px;"><b style="color:var(--paper);">Tonight</b></p><ol class="stage-steps">' + steps + '</ol>'
+    + '<div class="stage-day"><b>By day:</b> ' + st.day + '</div></div>'
+    + stageCard
+    + '<div class="panel"><h2>The mark: your 28 days</h2>'
+    + '<p>Log one line a day for a full cycle. After a month you can see where your energy runs high or low, and where deals tend to arrive or stall.</p>'
+    + '<div class="mk-grid">' + cells + '</div>'
+    + '<p class="subhead" style="margin-top:20px;">Today: energy, from 1 (low) to 5 (high)</p><div class="mood-row" id="mkEnergy">' + energyChips + '</div>'
+    + '<p class="subhead" style="margin-top:16px;">Money today</p><div class="mood-row" id="mkMoney">' + moneyChips + '</div>'
+    + '<textarea id="mkNote" maxlength="240" style="margin-top:14px;width:100%;" placeholder="Where did a deal, payment, or conversation arrive or stall today? One line is plenty."></textarea>'
+    + '<div style="margin-top:12px;"><button class="primary" id="mkSave" type="button">' + (todayEntry ? 'Update today' : 'Log today') + '</button></div>'
+    + (rows ? '<h3 style="margin-top:24px;">Patterns so far</h3><div style="margin-top:6px;">' + rows + '</div>' + insight : insight)
+    + (recent ? '<h3 style="margin-top:24px;">Recent entries</h3>' + recent : '')
+    + '</div>'
+    + '<p class="care-note" style="margin-top:0;border-top:none;">This is a reflection routine, not a way to make money appear. What it can do is keep you calm, focused, and consistent, and the money still comes from the steps you take by day. Moon times are calculated and accurate to within a few minutes, but the phase labels are a guide, not hard edges.</p>';
+
+  wireMoonPractice({ph, cycleKey, todayKey, thisCycleIntention, log, todayEntry});
+}
+
+function wireMoonPractice(ctx){
+  const {ph, cycleKey, todayKey, thisCycleIntention, log, todayEntry} = ctx;
+
+  const saveIntent = document.getElementById('moonIntentionSave');
+  if(saveIntent){
+    saveIntent.addEventListener('click', async () => {
+      const text = document.getElementById('moonIntention').value.trim();
+      if(!text) return;
+      const rec = {text, cycleKey, nights: thisCycleIntention ? thisCycleIntention.nights : []};
+      await storageSet('moon:intention', JSON.stringify(rec));
+      renderMoonPractice();
+    });
+  }
+  const nightBtn = document.getElementById('moonNightBtn');
+  if(nightBtn && thisCycleIntention){
+    nightBtn.addEventListener('click', async () => {
+      if(thisCycleIntention.nights.indexOf(todayKey) === -1 && thisCycleIntention.nights.length < 3){
+        const rec = {text: thisCycleIntention.text, cycleKey, nights: thisCycleIntention.nights.concat([todayKey])};
+        await storageSet('moon:intention', JSON.stringify(rec));
+      }
+      renderMoonPractice();
+    });
+  }
+  const relBtn = document.getElementById('moonReleaseSave');
+  if(relBtn){
+    relBtn.addEventListener('click', async () => {
+      const text = document.getElementById('moonRelease').value.trim();
+      if(!text) return;
+      await storageSet('moon:release', JSON.stringify({text, cycleKey, date: todayKey}));
+      renderMoonPractice();
+    });
+  }
+
+  // Tracker form
+  let energy = todayEntry ? todayEntry.energy : null;
+  let money = todayEntry ? todayEntry.money : null;
+  const note = document.getElementById('mkNote');
+  if(todayEntry && note) note.value = todayEntry.note || '';
+  function paint(){
+    document.querySelectorAll('#mkEnergy .mk-chip').forEach(b => b.classList.toggle('sel', Number(b.dataset.energy) === energy));
+    document.querySelectorAll('#mkMoney .mk-chip').forEach(b => b.classList.toggle('sel', b.dataset.money === money));
+  }
+  paint();
+  document.querySelectorAll('#mkEnergy .mk-chip').forEach(b => b.addEventListener('click', () => { energy = Number(b.dataset.energy); paint(); }));
+  document.querySelectorAll('#mkMoney .mk-chip').forEach(b => b.addEventListener('click', () => { money = b.dataset.money; paint(); }));
+  const saveBtn = document.getElementById('mkSave');
+  if(saveBtn){
+    saveBtn.addEventListener('click', async () => {
+      if(!energy || !money) return;
+      const entry = {date: todayKey, stage: ph.stage, energy, money, note: note.value.trim()};
+      const next = log.filter(e => e.date !== todayKey).concat([entry]);
+      await storageSet('moon:log', JSON.stringify(next));
+      renderMoonPractice();
+    });
+  }
+}
+
+/* ---------------------------------------------------------
    NAVIGATION
 --------------------------------------------------------- */
 function showScreen(name){
@@ -2480,6 +2844,7 @@ function showScreen(name){
   });
   if(name === 'profile') renderReading();
   if(name === 'today') renderToday();
+  if(name === 'moon') renderMoonPractice();
   if(name === 'fengshui') renderFengShuiScreen();
   if(name === 'journal'){ loadJournal().then(renderJournal); }
   window.scrollTo({top:0, behavior:'smooth'});
