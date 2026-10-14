@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiFengshuiRouteImport } from './routes/api/fengshui'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiFengshuiRoute = ApiFengshuiRouteImport.update({
@@ -25,27 +31,31 @@ const ApiFengshuiRoute = ApiFengshuiRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/fengshui': typeof ApiFengshuiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/fengshui': typeof ApiFengshuiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/fengshui': typeof ApiFengshuiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/fengshui'
+  fullPaths: '/' | '/api/chat' | '/api/fengshui'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/fengshui'
-  id: '__root__' | '/' | '/api/fengshui'
+  to: '/' | '/api/chat' | '/api/fengshui'
+  id: '__root__' | '/' | '/api/chat' | '/api/fengshui'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiFengshuiRoute: typeof ApiFengshuiRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/fengshui': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiFengshuiRoute: ApiFengshuiRoute,
 }
 export const routeTree = rootRouteImport
