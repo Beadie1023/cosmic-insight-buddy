@@ -1516,12 +1516,40 @@ function computeAll(name, dob, refDate){
   return {lifePath, nameNum, psychic, py, loshu, lifePathKarmic, nameKarmic};
 }
 
-function renderSpellingExamples(){
-  return spellingExamples.map(ex=>{
+function spellingVariantsFor(fullName){
+  const clean = String(fullName||'').trim().replace(/\s+/g,' ');
+  const parts = clean.split(' ').filter(Boolean);
+  const out = []; const seen = new Set();
+  const add = (name, note) => { const k = name.toLowerCase(); if(!name || seen.has(k) || !/[a-z]/i.test(name)) return; seen.add(k); out.push({name, note}); };
+  if(!parts.length) return out;
+  const first = parts[0], last = parts.length>1 ? parts[parts.length-1] : '';
+  add(clean, 'your full name as entered');
+  if(parts.length>2) add(first+' '+last, 'first and last name only');
+  if(last) add(first, 'your first name on its own');
+  const swaps = [
+    [/ph/i,'f','with "f" in place of "ph"'], [/y/i,'i','with "i" in place of "y"'], [/ie$/i,'y','ending in "y" instead of "ie"'],
+    [/c(?=[aou])/i,'k','with "k" in place of "c"'], [/k/i,'c','with "c" in place of "k"'], [/([a-z])\1/i,'$1','with the double letter dropped'],
+    [/e$/i,'','without the final "e"'], [/a$/i,'ah','with an extra "h" at the end']
+  ];
+  for(const [re, rep, note] of swaps){
+    if(out.length>=5) break;
+    if(re.test(first)){
+      let v = first.replace(re, rep);
+      if(first[0]===first[0].toUpperCase()) v = v.charAt(0).toUpperCase()+v.slice(1);
+      add(v, 'your first name ' + note);
+    }
+  }
+  return out.slice(0,5);
+}
+
+function renderSpellingExamples(fullName){
+  const list = spellingVariantsFor(fullName);
+  return (list.length ? list : spellingExamples).map(ex=>{
     const n = reduceNum(nameToNumber(ex.name), true);
-    return `<div class="row"><span><span class="rowname">${ex.name}</span> <span class="rownote">— ${ex.note}</span></span><b>${n}</b></div>`;
+    return `<div class="row"><span><span class="rowname">${escapeHTMLSafe(ex.name)}</span> <span class="rownote">— ${ex.note}</span></span><b>${n}</b></div>`;
   }).join('');
 }
+function escapeHTMLSafe(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function renderFriendEnemyHTML(lifePathNum){
   const fe = friendEnemyFor(lifePathNum);
@@ -2247,8 +2275,8 @@ function renderReading(){
         <p>${lp.deep}</p>
 
         <h3 style="margin-top:22px;">How a name's spelling shifts its number</h3>
-        <p class="subhead">Every letter carries a value, so even a small spelling change moves the total. Here's the same idea with a few common names, so you can see it before trying your own below.</p>
-        <div class="spell-examples">${renderSpellingExamples()}</div>
+        <p class="subhead">Every letter carries a value, so even a small spelling change moves the total. Here's how a few spellings of your own name land, before you try your own below.</p>
+        <div class="spell-examples">${renderSpellingExamples(profile.name)}</div>
 
         <h3 style="margin-top:22px;">Numbers that tend to get along with ${lifePath} — and ones that don't</h3>
         <p class="subhead">In Chaldean tradition, every number has ones it tends to move easily beside, and ones that tend to create friction — sometimes called "enemy numbers." Treat this as a hint to expect a little more patience in a pairing, never as a verdict on a real relationship, friendship, or partner.</p>
