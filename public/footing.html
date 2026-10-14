@@ -708,6 +708,24 @@
     text-align:left;
   }
   a.linklike{color:var(--amber); cursor:pointer; text-decoration:underline;}
+
+.guide-wrap{display:flex;flex-direction:column;height:calc(100dvh - 150px);min-height:420px;}
+.guide-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.guide-clear{background:none;border:1px solid rgba(255,255,255,.18);color:var(--moonlight);border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap;}
+.guide-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px 12px;}
+.guide-empty{color:var(--moonlight);opacity:.7;text-align:center;margin:auto;font-size:14px;}
+.guide-msg{max-width:88%;white-space:pre-wrap;font-size:15px;line-height:1.6;}
+.guide-msg.user{align-self:flex-end;background:var(--amber);color:#1b2233;padding:10px 14px;border-radius:16px 16px 4px 16px;}
+.guide-msg.assistant{align-self:flex-start;color:var(--paper);padding:2px 2px;}
+.guide-msg.typing{opacity:.6;animation:guidePulse 1.2s ease-in-out infinite;}
+.guide-msg.err{color:var(--moonlight);font-style:italic;}
+@keyframes guidePulse{50%{opacity:.25}}
+.guide-chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none;}
+.guide-chips::-webkit-scrollbar{display:none;}
+.guide-chip{flex:0 0 auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:var(--paper);border-radius:999px;padding:8px 14px;font:inherit;font-size:13.5px;cursor:pointer;}
+.guide-bar{display:flex;gap:8px;align-items:flex-end;}
+.guide-bar textarea{flex:1;resize:none;font:inherit;font-size:16px;line-height:1.4;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:var(--paper);max-height:140px;}
+.guide-bar .primary{margin:0;}
 </style>
 </head>
 <body>
@@ -721,6 +739,7 @@
       <a data-screen="moon">Moon</a>
       <a data-screen="journal">Journal</a>
       <a data-screen="fengshui">Feng Shui</a>
+      <a data-screen="guide">Guide</a>
     </nav>
   </div>
 </header>
@@ -767,6 +786,11 @@
   <!-- FENG SHUI SCREEN -->
   <section class="screen" id="screen-fengshui">
     <div id="fengShuiRoot"></div>
+  </section>
+
+  <!-- GUIDE SCREEN -->
+  <section class="screen" id="screen-guide">
+    <div id="guideRoot"></div>
   </section>
 
   <!-- JOURNAL SCREEN -->
@@ -1794,6 +1818,95 @@ function renderFengShuiScreen(){
       result.textContent = 'Something went wrong — try again.';
     }finally{ btn.disabled = false; }
   });
+}
+
+/* ---------------------------------------------------------
+   GUIDE TAB — chart-aware AI chat, history kept in this browser
+--------------------------------------------------------- */
+const GUIDE_KEY = 'guide:messages';
+function loadGuide(){ try{ return JSON.parse(window.localStorage.getItem(GUIDE_KEY)||'[]'); }catch(e){ return []; } }
+function saveGuide(m){ try{ window.localStorage.setItem(GUIDE_KEY, JSON.stringify(m)); }catch(e){} }
+function guideProfileText(){
+  const dob = profile.dob; const by = Number(dob.split('-')[0]);
+  const c = computeAll(profile.name, dob, new Date());
+  const lp = numberData[c.lifePath] || {};
+  const missing = [1,2,3,4,5,6,7,8,9].filter(n=>!c.loshu[n]);
+  const present = [1,2,3,4,5,6,7,8,9].filter(n=>c.loshu[n]).map(n=>n+(c.loshu[n]>1?'×'+c.loshu[n]:''));
+  let g=null; try{ g = window.localStorage.getItem('fengshui:gender'); }catch(e){}
+  let kua = 'unknown (gender not chosen yet)';
+  if(g){ const k = kuaNumber(by, g); kua = `${k}, ${kuaData[k].group} group, best direction ${kuaData[k].direction}`; }
+  return [
+    `Name: ${profile.name}`, `Date of birth: ${dob}`,
+    `Life path: ${c.lifePath}${lp.strength?` (strength: ${lp.strength}; growth: ${lp.growth||''})`:''}`,
+    `Name / expression number: ${c.nameNum}`, `Psychic (birth day) number: ${c.psychic}`,
+    `Personal year (${new Date().getFullYear()}): ${c.py}`,
+    `Lo Shu grid present: ${present.join(', ')||'none'}; missing: ${missing.join(', ')||'none'}`,
+    `Chinese zodiac: ${elementForYear(by)} ${zodiacForYear(by)}`,
+    `Kua number: ${kua}`,
+    c.lifePathKarmic ? `Karmic debt in life path: ${c.lifePathKarmic}` : '',
+    c.nameKarmic ? `Karmic debt in name: ${c.nameKarmic}` : ''
+  ].filter(Boolean).join('\n');
+}
+let guideBusy = false;
+function renderGuideScreen(){
+  const root = document.getElementById('guideRoot');
+  if(!profile){ root.innerHTML = ''; return; }
+  const chips = ['What career paths fit my life path?','What does this personal year mean for me?','Explain my Lo Shu grid balance','What are my best colors and directions?','How do my birth element and Kua relate?','What should I focus on this month?'];
+  root.innerHTML = `
+    <div class="guide-wrap">
+      <div class="guide-head">
+        <div><p class="hero-line" style="margin:0;">Guide</p>
+        <p class="subhead" style="margin:4px 0 0;">Ask anything — the Guide already knows ${escapeHTMLSafe(profile.name.split(' ')[0])}'s chart.</p></div>
+        <button type="button" class="guide-clear" id="guideClear">New chat</button>
+      </div>
+      <div class="guide-log" id="guideLog"></div>
+      <div class="guide-chips">${chips.map(c=>`<button type="button" class="guide-chip">${c}</button>`).join('')}</div>
+      <form class="guide-bar" id="guideForm">
+        <textarea id="guideInput" rows="1" placeholder="Ask the Guide…"></textarea>
+        <button class="primary" type="submit" id="guideSend">Send</button>
+      </form>
+      <p class="care-note" style="margin:8px 0 0;">Your conversation is saved only on this device.</p>
+    </div>`;
+  const log = document.getElementById('guideLog');
+  const input = document.getElementById('guideInput');
+  let msgs = loadGuide();
+  function bubble(m){ const d = document.createElement('div'); d.className = 'guide-msg '+m.role; d.textContent = m.content; log.appendChild(d); return d; }
+  function draw(){
+    log.innerHTML = '';
+    if(!msgs.length){ const d=document.createElement('div'); d.className='guide-empty'; d.textContent='Tap a question below or write your own.'; log.appendChild(d); }
+    msgs.forEach(bubble); log.scrollTop = log.scrollHeight;
+  }
+  draw();
+  const grow = ()=>{ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; };
+  input.addEventListener('input', grow);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(input.value); } });
+  document.getElementById('guideForm').addEventListener('submit', e=>{ e.preventDefault(); send(input.value); });
+  root.querySelectorAll('.guide-chip').forEach(b=>b.addEventListener('click', ()=>send(b.textContent)));
+  document.getElementById('guideClear').addEventListener('click', ()=>{ if(guideBusy) return; msgs=[]; saveGuide(msgs); draw(); input.focus(); });
+  async function send(text){
+    text = String(text||'').trim(); if(!text || guideBusy) return;
+    guideBusy = true; document.getElementById('guideSend').disabled = true;
+    input.value=''; grow();
+    msgs.push({role:'user', content:text}); saveGuide(msgs); draw();
+    const out = bubble({role:'assistant', content:'…'}); out.classList.add('typing'); log.scrollTop = log.scrollHeight;
+    let reply = '';
+    try{
+      const resp = await fetch('/api/chat', { method:'POST', headers:{'content-type':'application/json'},
+        body: JSON.stringify({ profile: guideProfileText(), messages: msgs.slice(-16) }) });
+      if(!resp.ok || !resp.body){
+        let m='Something went wrong — try again.'; try{ const j=await resp.json(); if(j.error) m=j.error; }catch(e){}
+        out.classList.remove('typing'); out.classList.add('err'); out.textContent = m; msgs.pop(); saveGuide(msgs); return;
+      }
+      const r = resp.body.getReader(); const dec = new TextDecoder();
+      while(true){ const {done,value} = await r.read(); if(done) break; reply += dec.decode(value,{stream:true}); out.classList.remove('typing'); out.textContent = reply; log.scrollTop = log.scrollHeight; }
+      if(!reply.trim()){ out.textContent = "The Guide didn't have an answer for that — try asking another way."; }
+      else { msgs.push({role:'assistant', content:reply}); saveGuide(msgs); }
+    }catch(e){
+      out.classList.remove('typing'); out.classList.add('err'); out.textContent='Something went wrong — try again.';
+      if(reply.trim()){ msgs.push({role:'assistant', content:reply}); saveGuide(msgs); }
+    }finally{ guideBusy=false; const sb=document.getElementById('guideSend'); if(sb) sb.disabled=false; input.focus(); }
+  }
+  input.focus();
 }
 
 function wireRisingSignTool(dobStr){
@@ -2874,6 +2987,7 @@ function showScreen(name){
   if(name === 'today') renderToday();
   if(name === 'moon') renderMoonPractice();
   if(name === 'fengshui') renderFengShuiScreen();
+  if(name === 'guide') renderGuideScreen();
   if(name === 'journal'){ loadJournal().then(renderJournal); }
   window.scrollTo({top:0, behavior:'smooth'});
 }
