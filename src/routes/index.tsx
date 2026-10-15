@@ -7,13 +7,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A quiet, private numerology and astrology companion for practical reflection.",
+          "A quiet numerology and astrology companion for practical reflection. Your reading is calculated in your browser.",
       },
       { property: "og:title", content: "Footing — a numerology companion" },
       {
         property: "og:description",
         content:
-          "A quiet, private numerology and astrology companion for practical reflection.",
+          "A quiet numerology and astrology companion for practical reflection. Your reading is calculated in your browser.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
