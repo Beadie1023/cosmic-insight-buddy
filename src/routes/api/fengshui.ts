@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { clientKey, isRateLimited } from "@/lib/rate-limit";
+
+// Set AI_MODEL in the project's environment to switch models without a code change.
+const MODEL = process.env["AI_MODEL"] || "openai/gpt-6-astra";
 
 const Body = z.object({
   image: z.string().regex(/^data:image\/(jpeg|png|webp|gif);base64,/).max(21_000_000),
@@ -20,6 +24,8 @@ export const Route = createFileRoute("/api/fengshui")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (isRateLimited("fengshui", clientKey(request), 6, 10 * 60 * 1000))
+          return json(429, "That's a lot of photos in a short time — please wait a few minutes and try again.");
         const parsed = Body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return json(400, "That photo didn't work — try a JPEG, PNG, WebP or GIF.");
         const d = parsed.data;
@@ -48,7 +54,7 @@ Plain language, warm tone, about 300-450 words. Use short section labels on thei
             "content-type": "application/json",
           },
           body: JSON.stringify({
-            model: "openai/gpt-6-astra",
+            model: MODEL,
             stream: true,
             store: false,
             reasoning: { effort: "low" },
