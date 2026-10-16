@@ -848,9 +848,21 @@ const karmicDebtMeaning = {
   19:"A karmic debt tied to past misuse of power — this life asks you to stand on your own strength without leaning on others or using it over them."
 };
 
+// Folds accented letters to their plain base letters (José -> Jose, Álvarez -> Alvarez, Zoë -> Zoe)
+// so names from Spanish, French, Haitian Creole, etc. score the same as their unaccented spelling.
+function foldName(s){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\u00df/g,'ss').replace(/\u00e6/g,'ae').replace(/\u00c6/g,'AE')
+    .replace(/\u0153/g,'oe').replace(/\u0152/g,'OE')
+    .replace(/\u00f8/g,'o').replace(/\u00d8/g,'O')
+    .replace(/\u0142/g,'l').replace(/\u0141/g,'L')
+    .replace(/\u0111/g,'d').replace(/\u0110/g,'D')
+    .replace(/\u0131/g,'i');
+}
+
 function nameToNumber(fullName){
   let sum = 0;
-  for(const ch of fullName.toLowerCase()){
+  for(const ch of foldName(fullName).toLowerCase()){
     if(chaldeanMap[ch]) sum += chaldeanMap[ch];
   }
   return sum;
@@ -990,7 +1002,7 @@ function reducePyth(n){
 }
 function pythNameNumber(name){
   let sum = 0;
-  for(const ch of name.toLowerCase()){ if(pythagoreanMap[ch]) sum += pythagoreanMap[ch]; }
+  for(const ch of foldName(name).toLowerCase()){ if(pythagoreanMap[ch]) sum += pythagoreanMap[ch]; }
   return reducePyth(sum);
 }
 
@@ -1002,7 +1014,7 @@ const hebrewApproxMap = {
 };
 function hebrewApproxNumber(name){
   let sum = 0;
-  for(const ch of name.toLowerCase()){ if(hebrewApproxMap[ch]) sum += hebrewApproxMap[ch]; }
+  for(const ch of foldName(name).toLowerCase()){ if(hebrewApproxMap[ch]) sum += hebrewApproxMap[ch]; }
   return reduceNum(sum, false); // "mispar katan" style full reduction, no master retained
 }
 
@@ -1111,6 +1123,19 @@ const kuaData = {
   8:{group:"West", direction:"Northeast"},
   9:{group:"East", direction:"South"}
 };
+// Feng shui Kua follows the solar year, which starts at Li Chun (Sun at 315 deg, about Feb 4), not Jan 1.
+function kuaYearInfo(dobStr){
+  const [y, m, d] = dobStr.split('-').map(Number);
+  const cross = findSunCrossingMs(315, Date.UTC(y,0,30), Date.UTC(y,1,9));
+  const day = Math.floor((cross + 8*3600000)/86400000);          // changeover day, UTC+8 (the usual convention)
+  const born = Math.floor(Date.UTC(y, m-1, d)/86400000);
+  return {year: born < day ? y - 1 : y, onChangeDay: born === day};
+}
+function kuaYearFor(dobStr){ return kuaYearInfo(dobStr).year; }
+function kuaChangeDayNote(dobStr){
+  return kuaYearInfo(dobStr).onChangeDay
+    ? ' <span style="color:var(--muted);">Note: you were born on the day the solar year changes, so depending on your birth hour your Kua could be the one for the previous year.</span>' : '';
+}
 function kuaNumber(birthYear, gender){
   const s = reduceNum(birthYear % 100, false);
   const raw = (gender === 'male')
@@ -1153,6 +1178,78 @@ const modalityBlurb = {
   Fixed:    "Fixed signs sustain — they hold a season steady once it's already underway.",
   Mutable:  "Mutable signs adapt — they close out a season and prepare everyone else for the shift to the next one."
 };
+
+/* ---------- Solar longitude, sign ingress, Lunar New Year (added) ---------- */
+// Low-precision apparent solar longitude (Meeus ch. 25), good to ~0.01 deg (~15 min of time).
+function sunLongitudeAtMs(ms){
+  const JD = ms/86400000 + 2440587.5;
+  const T = (JD - 2451545.0)/36525;
+  const L0 = 280.46646 + 36000.76983*T + 0.0003032*T*T;
+  const M = (357.52911 + 35999.05029*T - 0.0001537*T*T) * Math.PI/180;
+  const C = (1.914602 - 0.004817*T - 0.000014*T*T)*Math.sin(M)
+          + (0.019993 - 0.000101*T)*Math.sin(2*M) + 0.000289*Math.sin(3*M);
+  const omega = (125.04 - 1934.136*T) * Math.PI/180;
+  const lon = L0 + C - 0.00569 - 0.00478*Math.sin(omega);
+  return ((lon % 360) + 360) % 360;
+}
+const SIGN_NAMES_BY_LON = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+function sunSignAtMs(ms){ return SIGN_NAMES_BY_LON[Math.floor(sunLongitudeAtMs(ms)/30)]; }
+// Finds the moment (ms, UTC) the Sun reaches targetLon within [startMs, endMs], or null.
+function findSunCrossingMs(targetLon, startMs, endMs){
+  const diff = ms => { let d = sunLongitudeAtMs(ms) - targetLon; d = ((d + 540) % 360) - 180; return d; };
+  let lo = startMs, hi = endMs;
+  if(!(diff(lo) < 0 && diff(hi) >= 0)) return null;
+  for(let i = 0; i < 40; i++){ const mid = (lo+hi)/2; if(diff(mid) < 0) lo = mid; else hi = mid; }
+  return Math.round((lo+hi)/2);
+}
+// Date-only Sun sign: reads the sign at noon UTC, and reports a sign change within that UTC day.
+function sunSignForDateAstro(y, m, d){
+  const start = Date.UTC(y, m-1, d, 0, 0, 0), end = start + 86400000;
+  const before = sunSignAtMs(start), after = sunSignAtMs(end - 1);
+  if(before === after) return {sign: before, cusp: null};
+  const lon = (SIGN_NAMES_BY_LON.indexOf(after)) * 30;
+  const ingress = findSunCrossingMs(lon, start, end);
+  return {sign: sunSignAtMs(start + 12*3600000), cusp: {before, after, ingressMs: ingress}};
+}
+// New moon (Meeus ch. 49, main periodic terms; ~minutes accuracy). Returns JD (TT, treated as UT).
+function newMoonJD(k){
+  const T = k/1236.85, r = Math.PI/180;
+  const E = 1 - 0.002516*T - 0.0000074*T*T;
+  const M  = (2.5534 + 29.10535670*k - 0.0000014*T*T) * r;
+  const Mp = (201.5643 + 385.81693528*k + 0.0107582*T*T) * r;
+  const F  = (160.7108 + 390.67050284*k - 0.0016118*T*T) * r;
+  const Om = (124.7746 - 1.56375588*k + 0.0020672*T*T) * r;
+  let jde = 2451550.09766 + 29.530588861*k + 0.00015437*T*T;
+  jde += -0.40720*Math.sin(Mp) + 0.17241*E*Math.sin(M) + 0.01608*Math.sin(2*Mp)
+       + 0.01039*Math.sin(2*F) + 0.00739*E*Math.sin(Mp-M) - 0.00514*E*Math.sin(Mp+M)
+       + 0.00208*E*E*Math.sin(2*M) - 0.00111*Math.sin(Mp-2*F) - 0.00057*Math.sin(Mp+2*F)
+       + 0.00056*E*Math.sin(2*Mp+M) - 0.00042*Math.sin(3*Mp) + 0.00042*E*Math.sin(M+2*F)
+       + 0.00038*E*Math.sin(M-2*F) - 0.00024*E*Math.sin(2*Mp-M) - 0.00017*Math.sin(Om);
+  return jde;
+}
+// Lunar New Year: month 11 of the Chinese calendar is the month (new-moon day to new-moon day, UTC+8)
+// containing the winter solstice; month 12 is the next, and month 1 the one after. So the new year starts
+// on the second new-moon day after the start of the solstice month. (Leap months 11/12 are very rare and
+// are not handled; an error would only affect births in a narrow late-January/February window.)
+const lnyCache = {};
+function lunarNewYear(y){
+  if(lnyCache[y]) return lnyCache[y];
+  const CN = 8*3600000, dayOf = ms => Math.floor((ms + CN)/86400000);
+  const sol = findSunCrossingMs(270, Date.UTC(y-1,11,19), Date.UTC(y-1,11,24));
+  const solDay = dayOf(sol);
+  const k0 = Math.round((y - 1 - 2000 + 0.97)*12.3685);
+  const days = [];
+  for(let k = k0-3; k <= k0+5; k++) days.push(dayOf((newMoonJD(k) - 2440587.5)*86400000));
+  let i = 0; while(i+1 < days.length && days[i+1] <= solDay) i++;   // start of month 11
+  const dt = new Date(days[i+2]*86400000);
+  return (lnyCache[y] = {month: dt.getUTCMonth()+1, day: dt.getUTCDate()});
+}
+// Year to use for the animal/element/polarity: the previous year if born before Lunar New Year.
+function chineseYearForStr(dobStr){ const [y,m,d] = dobStr.split('-').map(Number); return chineseYearFor(y,m,d); }
+function chineseYearFor(y, m, d){
+  const l = lunarNewYear(y);
+  return (m*100 + d) < (l.month*100 + l.day) ? y - 1 : y;
+}
 
 function sunSignForDate(m, d){
   const md = m*100 + d;
@@ -1537,7 +1634,7 @@ function computeAll(name, dob, refDate){
   const psychic = psychicFromDOB(dob);
   const py = personalYear(dob, refDate);
   const loshu = loShuCounts(dob);
-  return {lifePath, nameNum, psychic, py, loshu, lifePathKarmic, nameKarmic};
+  return {lifePath, nameNum, nameNumRaw, psychic, py, loshu, lifePathKarmic, nameKarmic};
 }
 
 function spellingVariantsFor(fullName){
@@ -1600,7 +1697,7 @@ function renderFriendEnemyHTML(lifePathNum){
 function renderTraditionsHTML(name, dobStr, lifePathNum, py){
   const pyth = pythNameNumber(name);
   const heb = hebrewApproxNumber(name);
-  const hebRaw = (function(){ let s=0; for(const ch of name.toLowerCase()){ if(hebrewApproxMap[ch]) s += hebrewApproxMap[ch]; } return s; })();
+  const hebRaw = (function(){ let s=0; for(const ch of foldName(name).toLowerCase()){ if(hebrewApproxMap[ch]) s += hebrewApproxMap[ch]; } return s; })();
   const chineseCounts = chineseLensForDOB(dobStr);
   const chineseRows = Object.keys(chineseCounts).sort((a,b)=>Number(a)-Number(b)).map(dStr=>{
     const d = Number(dStr);
@@ -1639,10 +1736,10 @@ function wireKuaCheck(dobStr){
       document.querySelectorAll('.kua-btn').forEach(b=>b.classList.remove('sel'));
       btn.classList.add('sel');
       const gender = btn.dataset.gender;
-      const kua = kuaNumber(birthYear, gender);
+      const kua = kuaNumber(kuaYearFor(dobStr), gender);
       const info = kuaData[kua];
       const result = document.getElementById('kuaResult');
-      result.innerHTML = `Your Kua number is <b style="color:var(--amber);">${kua}</b>, in the <b style="color:var(--paper);">${info.group} group</b>. Traditionally, your most favorable direction to face — for work, sleep, or where you sit — is <b style="color:var(--paper);">${info.direction}</b>.`;
+      result.innerHTML = `Your Kua number is <b style="color:var(--amber);">${kua}</b>, in the <b style="color:var(--paper);">${info.group} group</b>. Traditionally, your most favorable direction to face — for work, sleep, or where you sit — is <b style="color:var(--paper);">${info.direction}</b>.${kuaChangeDayNote(dobStr)}`;
       result.classList.add('show');
     });
   });
@@ -1677,8 +1774,8 @@ async function wireFengShuiTool(lifePathNum, dobStr){
   const result = document.getElementById('fengShuiResult');
   const lp = numberData[lifePathNum];
   const birthYear = Number(dobStr.split('-')[0]);
-  const element = elementForYear(birthYear);
-  const kua = kuaData[kuaNumber(birthYear, 'female')]; // direction guidance is the useful part either way
+  const element = elementForYear(chineseYearForStr(dobStr));
+  const kua = kuaData[kuaNumber(kuaYearFor(dobStr), 'female')]; // direction guidance is the useful part either way
 
   btn.addEventListener('click', async ()=>{
     const file = fileInput.files && fileInput.files[0];
@@ -1732,7 +1829,7 @@ function renderFengShuiScreen(){
   const dob = profile.dob;
   const birthYear = Number(dob.split('-')[0]);
   const lifePathNum = lifePathFromDOB(dob);
-  const element = elementForYear(birthYear);
+  const element = elementForYear(chineseYearForStr(dob));
   const savedGender = (function(){ try{ return window.localStorage.getItem('fengshui:gender'); }catch(e){ return null; } })();
   root.innerHTML = `
     <p class="hero-line">Feng shui</p>
@@ -1771,7 +1868,7 @@ function renderFengShuiScreen(){
   const kuaOut = document.getElementById('fsKua');
   function showKua(){
     if(!gender) return;
-    const k = kuaNumber(birthYear, gender);
+    const k = kuaNumber(kuaYearFor(dob), gender);
     const info = kuaData[k];
     kuaOut.innerHTML = `Kua <b style="color:var(--amber);">${k}</b>, ${info.group} group — your best direction is <b style="color:var(--paper);">${info.direction}</b>.`;
     kuaOut.classList.add('show');
@@ -1796,7 +1893,7 @@ function renderFengShuiScreen(){
     result.textContent = 'Looking at your room…';
     try{
       const image = await new Promise((res, rej)=>{ const r = new FileReader(); r.onload = ()=>res(r.result); r.onerror = rej; r.readAsDataURL(file); });
-      const k = kuaNumber(birthYear, gender);
+      const k = kuaNumber(kuaYearFor(dobStr), gender);
       const resp = await fetch('/api/fengshui', {
         method:'POST', headers:{'content-type':'application/json'},
         body: JSON.stringify({
@@ -1834,14 +1931,14 @@ function guideProfileText(){
   const present = [1,2,3,4,5,6,7,8,9].filter(n=>c.loshu[n]).map(n=>n+(c.loshu[n]>1?'×'+c.loshu[n]:''));
   let g=null; try{ g = window.localStorage.getItem('fengshui:gender'); }catch(e){}
   let kua = 'unknown (gender not chosen yet)';
-  if(g){ const k = kuaNumber(by, g); kua = `${k}, ${kuaData[k].group} group, best direction ${kuaData[k].direction}`; }
+  if(g){ const k = kuaNumber(kuaYearFor(dob), g); kua = `${k}, ${kuaData[k].group} group, best direction ${kuaData[k].direction}`; }
   return [
     `Name: ${profile.name}`, `Date of birth: ${dob}`,
     `Life path: ${c.lifePath}${lp.strength?` (strength: ${lp.strength}; growth: ${lp.growth||''})`:''}`,
     `Name / expression number: ${c.nameNum}`, `Psychic (birth day) number: ${c.psychic}`,
     `Personal year (${new Date().getFullYear()}): ${c.py}`,
     `Lo Shu grid present: ${present.join(', ')||'none'}; missing: ${missing.join(', ')||'none'}`,
-    `Chinese zodiac: ${elementForYear(by)} ${zodiacForYear(by)}`,
+    `Chinese zodiac: ${elementForYear(chineseYearForStr(dob))} ${zodiacForYear(chineseYearForStr(dob))}`,
     `Kua number: ${kua}`,
     c.lifePathKarmic ? `Karmic debt in life path: ${c.lifePathKarmic}` : '',
     c.nameKarmic ? `Karmic debt in name: ${c.nameKarmic}` : ''
@@ -1960,7 +2057,9 @@ function wireRisingSignTool(dobStr){
       const deg = ascendantDegree(dobStr, hh, mm, lat, lon, utcOffset);
       const sign = signForEclipticLongitude(deg);
       const info = zodiacSignData[sign];
-      result.innerHTML = `Your Rising Sign is <b style="color:var(--amber);">${info.symbol} ${sign}</b>, at ${(deg%30).toFixed(1)}\u00b0 into the sign. Traditionally read as ${info.trait}.`;
+      const [by0, bm0, bd0] = dobStr.split('-').map(Number);
+      const sunAtBirth = sunSignAtMs(Date.UTC(by0, bm0-1, bd0, hh, mm) - utcOffset*3600000);
+      result.innerHTML = `Your Rising Sign is <b style="color:var(--amber);">${info.symbol} ${sign}</b>, at ${(deg%30).toFixed(1)}\u00b0 into the sign. Traditionally read as ${info.trait}.<br><br>At that exact time and UTC offset, your Sun sign is <b style="color:var(--amber);">${zodiacSignData[sunAtBirth].symbol} ${sunAtBirth}</b>.`;
     } else if(mode === 'hour'){
       const hh = Number(document.getElementById('birthHourSelect').value);
       const signs = ascendantSignsForHour(dobStr, hh, lat, lon, utcOffset);
@@ -2062,13 +2161,13 @@ function cueLetterValue(ch){
 // "Non-Reduced": sum every letter's raw case-sensitive value, reduce once at the end.
 function cueNonReducedTotal(name){
   let sum = 0;
-  for(const ch of name){ sum += cueLetterValue(ch); }
+  for(const ch of foldName(name)){ sum += cueLetterValue(ch); }
   return sum;
 }
 // "Reduced": reduce each letter's value to a single digit FIRST, then sum those digits.
 function cueReducedTotal(name){
   let sum = 0;
-  for(const ch of name){
+  for(const ch of foldName(name)){
     const v = cueLetterValue(ch);
     if(v) sum += reduceNum(v, false);
   }
@@ -2077,7 +2176,7 @@ function cueReducedTotal(name){
 
 
 function letterology(fullName){
-  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  const words = foldName(fullName).trim().split(/\s+/).filter(Boolean);
   let vowelSum = 0, consSum = 0;
   const parts = words.map(w=>{
     const letters = [];
@@ -2175,7 +2274,7 @@ function renderCueLetterologyHTML(fullName){
   const nonReducedFinal = reduceNum(nonReducedRaw, true);
   const reducedRaw = cueReducedTotal(fullName);
   const reducedFinal = reduceNum(reducedRaw, true);
-  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  const words = foldName(fullName).trim().split(/\s+/).filter(Boolean);
   const rows = words.map(w=>{
     const chips = [...w].map(ch=>{
       const v = cueLetterValue(ch);
@@ -2203,6 +2302,117 @@ function renderCueLetterologyHTML(fullName){
     </details>
     <p class="care-note">Both formulas and both figures — Reduced and Non-Reduced — are verified against two real Cue output cards, not guessed. Try ALL CAPS vs. all lowercase above to see the numbers actually move.</p>
   `;
+}
+
+// Chaldean practitioners read the two-digit "compound" number a name adds up to (10-52) before it is
+// reduced to a single digit. Meanings below are short paraphrases of the traditional (Cheiro-lineage) readings;
+// teachers differ, especially above 31, so those are shown as numbers only.
+const compoundMeanings = {
+  10:["The Wheel of Fortune","Fortunes rise and fall, and honor comes through self-reliance and steady nerve."],
+  11:["The Clenched Hand","A watchfulness number: hidden obstacles or rivals are possible, so it rewards alertness and good judgment."],
+  12:["The Sacrifice","Anxiety and being tested are possible themes; the traditional advice is to keep a clear head and not carry others' burdens."],
+  13:["Change","Upheaval that clears the old to make room for the new; strongly tied to transformation and hard work."],
+  14:["Movement","Change, travel, and risk-taking; the tradition counsels care with speculation and impulsive moves."],
+  15:["The Magician","Charm, magnetism, and a gift for persuasion; generally seen as fortunate."],
+  16:["The Shattered Citadel","Sudden upsets to carefully built plans; read as a call to humility and to build on firmer ground."],
+  17:["The Star of the Magi","Lasting success and peace, with a spiritual or idealistic streak; widely seen as favorable."],
+  18:["Spirit against matter","A tension between ideals and material pressures; the tradition advises caution about deception and conflict."],
+  19:["The Prince of Heaven","Happiness, honor, and success. Western numerology instead treats 19 as a karmic-debt number, so traditions disagree."],
+  20:["The Awakening","A call to a new purpose or a decision; often read as a turning point toward action."],
+  21:["The Crown of the Magi","Advancement and honor, usually after a stretch of struggle; widely seen as very favorable."],
+  22:["Submission","Good-hearted and trusting; the tradition cautions against being led astray or taking on too much."],
+  23:["The Royal Star of the Lion","Success, protection, and help from people in higher positions; seen as favorable."],
+  24:["Love and gain","Favorable for relationships and for support from others."],
+  25:["Strength through experience","Insight gained through trials; success tends to come after observation and analysis."],
+  26:["Partnerships","Mixed: partnerships can help or hinder, so choose collaborators carefully."],
+  27:["The Sceptre","Authority and reward for creative effort; seen as favorable."],
+  28:["Contradictions","Gains can be lost unless you stay self-reliant; a mixed reading."],
+  29:["Uncertainties","Unsteady circumstances and relationships; the tradition advises caution about whom to trust."],
+  30:["The thoughtful loner","Deep, mental, and somewhat detached; independent rather than social."],
+  31:["The self-contained","Private and self-reliant, sometimes isolated; strong on one's own."],
+  32:["Communication","Gifts for communication and dealing with others; behaves much like a 5."]
+};
+function renderCompoundBlock(raw){
+  if(raw < 10) return '';
+  let c = raw; while(c > 52) c = String(c).split('').reduce((a,d)=>a+Number(d),0);
+  const root = reduceNum(c, false), m = compoundMeanings[c];
+  const via = raw !== c ? `Your letters total ${raw}, which reduces to compound ${c}. ` : '';
+  return `
+    <h3 style="margin-top:22px;">Your Chaldean compound number</h3>
+    <p class="subhead">Chaldean practitioners read the number your name adds up to <i>before</i> reducing it to one digit. ${via}Compound <b style="color:var(--amber);">${c}</b> reduces to ${root}.</p>
+    ${m ? `<p><b style="color:var(--paper);">${c} \u2014 ${m[0]}.</b> ${m[1]}</p>` : `<p>Compounds above 32 are read differently between teachers, so only the number is shown here rather than guess at a meaning.</p>`}
+    <p class="care-note">Traditional readings vary between teachers and are best taken as themes, not predictions. Chaldean practice also does not usually treat 11 or 22 as master numbers, which this app's single-digit reading does.</p>`;
+}
+
+/* ---------------------------------------------------------
+   MORE NAME + TIMING NUMBERS: Maturity, Karmic Lessons, Hidden Passion, Personal Month.
+   These follow the Pythagorean (1-9) letter table, which is how they are normally taught.
+--------------------------------------------------------- */
+function pythLetterDigits(name){
+  const out = [];
+  for(const ch of foldName(name).toLowerCase()){ if(pythagoreanMap[ch]) out.push(pythagoreanMap[ch]); }
+  return out;
+}
+const lessonMeaning = {
+  1:"Independence and initiative: practice making your own call and starting things without waiting to be asked.",
+  2:"Patience and cooperation: practice listening, sharing credit, and letting things develop at their own pace.",
+  3:"Self-expression: practice saying what you actually think and feel, and letting yourself be playful.",
+  4:"Discipline and order: practice routines, follow-through, and building things step by step.",
+  5:"Adaptability: practice flexibility and handling change without clinging to a fixed plan.",
+  6:"Responsibility and care: practice showing up for family, community, and commitments.",
+  7:"Trust and reflection: practice quiet time, learning, and trusting your inner sense over noise.",
+  8:"Money and power: practice handling resources, authority, and ambition in a balanced, confident way.",
+  9:"Compassion and letting go: practice generosity, forgiveness, and seeing beyond your own situation."
+};
+const monthFocus = {
+  1:"a good month to start something or take the lead.",
+  2:"a month for patience, partnership, and small steady progress.",
+  3:"a month for communication, creativity, and being around people.",
+  4:"a month for work, organization, and getting the foundations right.",
+  5:"a month of change, movement, and the unexpected; stay flexible.",
+  6:"a month centered on home, family, and responsibilities to others.",
+  7:"a quieter month for rest, study, and reflection.",
+  8:"a month focused on work, money, and results.",
+  9:"a month for finishing, clearing out, and letting go of what's done."
+};
+function renderMoreNumbersHTML(name, lifePath, py, refDate){
+  const digits = pythLetterDigits(name);
+  if(!digits.length) return '';
+  const expression = reducePyth(digits.reduce((a,b)=>a+b,0));
+  const maturity = reducePyth(lifePath + expression);
+  const mKey = numberData[maturity] ? maturity : reduceNum(maturity, false);
+  const counts = {}; digits.forEach(d=>{ counts[d] = (counts[d]||0)+1; });
+  const missing = [1,2,3,4,5,6,7,8,9].filter(d=>!counts[d]);
+  const top = Math.max(...Object.values(counts));
+  const passion = Object.keys(counts).filter(d=>counts[d]===top).map(Number).sort((a,b)=>a-b);
+  const month = refDate.getMonth()+1;
+  const pmNow = reduceNum(py + month, false);
+  const nextRef = new Date(refDate.getFullYear(), month, 1);
+  const pyNext = personalYear(profile.dob, nextRef);
+  const pmNext = reduceNum(pyNext + (nextRef.getMonth()+1), false);
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const lessons = missing.length
+    ? missing.map(d=>`<div class="row"><span><b style="color:var(--paper);">${d}</b> \u2014 ${lessonMeaning[d]}</span></div>`).join('')
+    : `<p>No digit from 1 to 9 is missing from your name, so there are no karmic lessons in this system.</p>`;
+  return `
+    <div class="panel">
+      <h2>More from your name and your timing</h2>
+      <p class="subhead">These four use the Pythagorean letter table (A=1 through I=9, then repeating), which is how they are normally taught, so they can differ from the Chaldean name number above.</p>
+
+      <h3 style="margin-top:18px;"><span class="num">${maturity}</span>Maturity number</h3>
+      <p>Your life path (${lifePath}) combined with your name's expression number (${expression}). Traditionally it grows more noticeable from around your mid-thirties or forties onward. The theme it points to: <b style="color:var(--paper);">${numberData[mKey].strength}</b>.</p>
+
+      <h3 style="margin-top:22px;">Karmic lessons (digits missing from your name)</h3>
+      <p class="subhead">A missing digit is read as a skill you build through experience, not a flaw. These are growth areas, not predictions.</p>
+      ${lessons}
+
+      <h3 style="margin-top:22px;">Hidden passion</h3>
+      <p>${passion.length===1 ? `The digit that appears most in your name is <b style="color:var(--amber);">${passion[0]}</b> (${top} times)` : `The digits that tie for most frequent in your name are <b style="color:var(--amber);">${passion.join(', ')}</b> (${top} times each)`}. Traditionally this marks a talent or drive you lean on heavily: ${passion.map(d=>numberData[d].strength).join('; ')}.</p>
+
+      <h3 style="margin-top:22px;">Personal month</h3>
+      <p>${monthNames[month-1]} is a personal month <b style="color:var(--amber);">${pmNow}</b> for you: ${monthFocus[pmNow]} ${monthNames[nextRef.getMonth()]} will be a ${pmNext}: ${monthFocus[pmNext]}</p>
+      <p class="care-note">Personal month = your personal year plus the calendar month, reduced to one digit. Treat all of this as a reflective lens, not a forecast.</p>
+    </div>`;
 }
 
 function renderKarmicBlock(karmicValue, subjectLabel){
@@ -2265,12 +2475,21 @@ function wireCompatCheck(lifePathNum){
   });
 }
 
+function cuspNoteHTML(res){
+  if(!res.cusp) return '';
+  const c = res.cusp, t = new Date(c.ingressMs);
+  const utc = t.toISOString().slice(0,16).replace('T',' ') + ' UTC';
+  return `<p class="care-note" style="margin-top:10px;"><b>Birthday on the cusp.</b> On your birth date the Sun moved from ${c.before} into ${c.after} at about ${utc} (give or take 15 minutes). Born before that moment, your Sun sign is ${c.before}; after it, ${c.after}. Convert that time to where you were born, and if you know your birth time, use the Rising Sign tool below, which also reports your Sun sign for your exact time. The sign shown above is only a best guess for a date-only entry.</p>`;
+}
+
 function renderAstrologyHTML(dobStr){
   const [y, m, d] = dobStr.split('-').map(Number);
-  const sign = sunSignForDate(m, d);
+  const sunRes = sunSignForDateAstro(y, m, d);
+  const sign = sunRes.sign;
   const info = zodiacSignData[sign];
 
-  const birthYear = y;
+  const birthYear = chineseYearFor(y, m, d);   // born before Lunar New Year -> previous year's animal
+  const lny = lunarNewYear(y);
   const animal = zodiacForYear(birthYear);
   const element = elementForYear(birthYear);
   const polarity = polarityForYear(birthYear);
@@ -2282,6 +2501,7 @@ function renderAstrologyHTML(dobStr){
     <p class="kicker">Western: Sun sign</p>
     <p class="big-number" style="font-size:44px;">${info.symbol} ${sign}</p>
     <p>${info.dates}. Traditionally read as ${info.trait}.</p>
+    ${cuspNoteHTML(sunRes)}
     <div class="meta-row" style="margin-top:14px;">
       <span><b>Element:</b> ${info.element}</span>
       <span><b>Modality:</b> ${info.modality}</span>
@@ -2289,7 +2509,7 @@ function renderAstrologyHTML(dobStr){
     </div>
     <p style="margin-top:14px;">${elementBlurb[info.element]}</p>
     <p style="margin-top:8px;">${modalityBlurb[info.modality]}</p>
-    <p class="care-note">This is your Sun sign, drawn from your birth date alone — the broadest, most widely known layer of a chart.</p>
+    <p class="care-note">This is your Sun sign, calculated from where the Sun actually was on your birth date — the broadest, most widely known layer of a chart. The date ranges shown are typical; the exact changeover moves by up to a day from year to year.</p>
 
     <details class="namecheck" style="margin-top:18px;">
       <summary>Know your birth time? Find your Rising Sign</summary>
@@ -2322,6 +2542,7 @@ function renderAstrologyHTML(dobStr){
 
     <h3 style="margin-top:24px;">Chinese: zodiac, element, and yin-yang</h3>
     <p style="margin-top:6px;"><b style="color:var(--paper);">${polarity} ${element} ${animal}</b> — the year you were born, in the twelve-year zodiac cycle. Traditionally read as ${zodiacTraits[animal]}.</p>
+    <p class="care-note" style="margin-top:6px;">The Chinese zodiac year starts on Lunar New Year, not January 1. In ${y} that fell on ${['','Jan','Feb','Mar'][lny.month]} ${lny.day}${birthYear !== y ? ', and your birth date is before it, so you take the previous year\u2019s animal' : ''}. Some astrologers use the start of spring (about February 4) instead, so near those dates you may see a different animal elsewhere.</p>
     <p class="care-note" style="margin-top:8px; border-top:none; padding-top:0;">The zodiac year runs on the lunar calendar, not January 1st, so if you were born in late January or early-to-mid February, your actual zodiac year could be the one before this.</p>
 
     <p style="margin-top:16px;"><b style="color:var(--paper);">Yin and yang.</b> ${yinYangGeneral} You were born in a <b style="color:var(--amber);">${polarity}</b> year — ${yinYangExplain[polarity]}</p>
@@ -2344,7 +2565,7 @@ function renderAstrologyHTML(dobStr){
 
 function renderReading(){
   const refDate = new Date();
-  const {lifePath, nameNum, psychic, py, loshu, lifePathKarmic, nameKarmic} = computeAll(profile.name, profile.dob, refDate);
+  const {lifePath, nameNum, nameNumRaw, psychic, py, loshu, lifePathKarmic, nameKarmic} = computeAll(profile.name, profile.dob, refDate);
   const lp = numberData[lifePath];
   const need = personalYearNeed[py];
   const positions = [4,9,2,3,5,7,8,1,6];
@@ -2411,6 +2632,7 @@ function renderReading(){
           </div>
         </div>
         ${renderKarmicBlock(nameKarmic, 'name number')}
+        ${renderCompoundBlock(nameNumRaw)}
         <h3 style="margin-top:22px;">A few small tweaks to your own name</h3>
         <p class="subhead">This is the actual mechanic behind traditional Chaldean "name correction" — nudging a spelling until its number sits in easier company with your life path. These are mechanical examples to show how it works, not a recommendation to go change your name.</p>
         ${renderNameTweaks(profile.name, lifePath)}
@@ -2434,6 +2656,8 @@ function renderReading(){
         <h2>Case-sensitive letterology</h2>
         ${renderCueLetterologyHTML(profile.name)}
       </div>
+
+      ${renderMoreNumbersHTML(profile.name, lifePath, py, refDate)}
 
       <div class="panel need-panel">
         <p class="kicker">Personal year ${py} · what this year is asking of you</p>
@@ -2576,7 +2800,14 @@ function wireAltNameCheck(lifePath){
     if(!alt){ return; }
     const altNum = reduceNum(nameToNumber(alt), true);
     const h = harmonyText(lifePath, nameToNumber(alt));
-    result.innerHTML = `<b style="color:var(--amber);">${titleCase(alt)}</b> gives a name number of <b style="color:var(--amber);">${altNum}</b> — ${h.tone}. ${h.text}`;
+    const altRaw = nameToNumber(alt);
+    let altC = altRaw; while(altC > 52) altC = String(altC).split('').reduce((a,d)=>a+Number(d),0);
+    const altM = compoundMeanings[altC];
+    const altPyth = reducePyth(pythLetterDigits(alt).reduce((a,b)=>a+b,0));
+    const compoundLine = altRaw >= 10
+      ? `<br><br>Chaldean compound: <b style="color:var(--amber);">${altC}</b>${altM ? ` \u2014 ${altM[0]}. ${altM[1]}` : ' (read differently between teachers above 32, so no meaning is given here)'}`
+      : '';
+    result.innerHTML = `<b style="color:var(--amber);">${titleCase(alt)}</b> gives a name number of <b style="color:var(--amber);">${altNum}</b> — ${h.tone}. ${h.text}${compoundLine}<br><br>In the Pythagorean system the same name adds up to <b style="color:var(--amber);">${altPyth}</b>. Try this with the name people actually call you, nicknames included, and compare it with your birth name.`;
     result.classList.add('show');
   });
 }
