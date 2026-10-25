@@ -2365,6 +2365,35 @@ function renderColorGuidanceHTML(lifePathNum){
     <p class="care-note">Playful, not a rule. Wear what you like.</p>`;
 }
 
+// Classical planetary days: each number's planet rules a weekday. Rahu (4) and Ketu (7) are shadow
+// points with no classical weekday of their own.
+const weekdayRuler = {1:['Sunday','the Sun'],2:['Monday','the Moon'],3:['Thursday','Jupiter'],5:['Wednesday','Mercury'],6:['Friday','Venus'],8:['Saturday','Saturn'],9:['Tuesday','Mars']};
+const weekdayNumber = {0:1,1:2,2:9,3:5,4:3,5:6,6:8};   // JS getDay() -> number of that day's ruling planet
+function weekdayEchoLine(dobStr, refDate, pd){
+  const n = weekdayNumber[refDate.getDay()];
+  const lp = baseOf(lifePathFromDOB(dobStr));
+  const psy = reduceNum(Number(dobStr.split('-')[2]), false);
+  const hits = [];
+  if(n === lp) hits.push('life path');
+  if(n === psy) hits.push('birth day');
+  if(n === pd) hits.push('personal day');
+  if(!hits.length) return '';
+  const [dayName, planet] = weekdayRuler[n];
+  return `<p class="care-note" style="margin-top:8px;">${dayName} is ruled by ${planet}, the planet of the ${n}, which matches your ${hits.join(' and ')}. A quiet echo.</p>`;
+}
+function renderWeekdayLensHTML(dobStr){
+  const lp = baseOf(lifePathFromDOB(dobStr));
+  const psy = reduceNum(Number(dobStr.split('-')[2]), false);
+  const nums = [...new Set([lp, psy])];
+  const lines = nums.map(n => weekdayRuler[n]
+    ? `<b style="color:var(--paper);">${weekdayRuler[n][0]}</b> (${weekdayRuler[n][1]}, your ${n})`
+    : `your ${n} belongs to ${numberData[n].planet}, which has no classical weekday`);
+  return `
+    <h3 style="margin-top:22px;">Your planetary weekdays</h3>
+    <p class="subhead">Each planet rules a day of the week. Your life path and birth-day numbers point to: ${lines.join('; ')}.</p>
+    <p class="care-note">A traditional lens for choosing a good day for something that matters to you, not a rule.</p>`;
+}
+
 function renderLuckyHTML(dobStr, refDate){
   const parts = dobStr.split('-');
   const lucky = String(Number(parts[1])).charAt(0) + parts[0].slice(-1);
@@ -2626,7 +2655,7 @@ const compoundMeanings = {
   25:["Strength through experience","Insight gained through trials; success tends to come after observation and analysis."],
   26:["Partnerships","Mixed: partnerships can help or hinder, so choose collaborators carefully."],
   27:["The Sceptre","Authority and reward for creative effort; seen as favorable."],
-  28:["Contradictions","Gains can be lost unless you stay self-reliant; a mixed reading."],
+  28:["Contradictions","Gains can be lost unless you stay self-reliant. The traditional advice: be honest but check that trust is mutual, take advice from real experts in the field, and read before you sign. Some modern teachers read 28 as a number of wealth; the older reading is more cautious."],
   29:["Uncertainties","Unsteady circumstances and relationships; the tradition advises caution about whom to trust."],
   30:["The thoughtful loner","Deep, mental, and somewhat detached; independent rather than social."],
   31:["The self-contained","Private and self-reliant, sometimes isolated; strong on one's own."],
@@ -2808,6 +2837,7 @@ function renderAstrologyHTML(dobStr){
     </div>
     <p style="margin-top:14px;">${elementBlurb[info.element]}</p>
     <p style="margin-top:8px;">${modalityBlurb[info.modality]}</p>
+    <p style="margin-top:8px;">${(function(){const n=reduceNum(d,false); const np=numberData[n].planet; const shared=np.split(' ')[0]===info.ruler; return '<b style="color:var(--paper);">Sign plus number:</b> born on the '+ordinal(d)+', you are a '+sign+' '+n+'. '+(shared ? 'Your sign and your birth-day number share '+info.ruler+' as ruler, so that planet\'s themes are doubled.' : 'Your sign is ruled by '+info.ruler+' while your birth-day number carries '+np+', so the number tends to flavor how the sign shows up.');})()}</p>
     <p style="margin-top:8px;">${(function(){const i=ZODIAC_ORDER.indexOf(sign); const t1=ZODIAC_ORDER[(i+4)%12], t2=ZODIAC_ORDER[(i+8)%12], opp=ZODIAC_ORDER[(i+6)%12]; return '<b style="color:var(--paper);">Easiest company:</b> the other '+info.element.toLowerCase()+' signs, '+t1+' and '+t2+', share your rhythm. <b style="color:var(--paper);">Most friction and pull:</b> '+opp+', directly opposite you. Opposites often attract and take more deliberate effort.';})()}</p>
     <p class="care-note">This is your Sun sign, calculated from where the Sun actually was on your birth date — the broadest, most widely known layer of a chart. The date ranges shown are typical; the exact changeover moves by up to a day from year to year.</p>
 
@@ -2932,7 +2962,7 @@ function renderReading(){
           </div>
           <div class="cell">
             <h3><span class="num">${chainLabel(nameNumRaw, true)}</span>Name number (Chaldean)</h3>
-            <p>Drawn from your full birth name, this is the deeper pull underneath — the direction your life tends to lean when you're not steering it consciously.</p>
+            <p>Drawn from your full birth name, this is the deeper pull underneath — the direction your life tends to lean when you're not steering it consciously. Chaldean teachers often use the name you are most known by instead of the birth name, so try that in the alternate-name check below.</p>
           </div>
         </div>
         <p class="care-note">Name numbers depend on the letter system. This one uses the Chaldean table. Maturity, karmic lessons and hidden passion use the Pythagorean table, which can give a different number for the same name (yours reads as ${pythNameNumber(profile.name)} in Pythagorean). Neither is wrong, they are different traditions.</p>
@@ -3037,6 +3067,7 @@ function renderReading(){
         </div>
         <p style="margin-top:14px;"><b style="color:var(--paper);">Today's grounding practice:</b> ${lp.practice}</p>
         ${renderColorGuidanceHTML(lifePath)}
+        ${renderWeekdayLensHTML(profile.dob)}
         ${renderLuckyHTML(profile.dob, refDate)}
         ${renderHouseLensHTML()}
       </div>
@@ -3205,6 +3236,7 @@ function renderToday(){
       <div class="today-num">${pd}</div>
       <p style="margin-top:6px;">Your personal day number, ruled by ${info.planet}</p>
       ${masterDayLine(refDate.getDate())}
+      ${weekdayEchoLine(profile.dob, refDate, pd)}
       <p class="subhead" style="margin-top:6px;">${(function(){const y=personalYearDetail(profile.dob, effectiveYear(profile.dob, refDate)); const pm=personalMonthPeriods(profile.dob, refDate); return 'Personal year '+y.label+' \u00b7 month '+pm.periods[pm.cur].num+' \u00b7 day '+pd;})()}</p>
     </div>
     <div class="panel">
