@@ -821,9 +821,61 @@ const chaldeanMap = {
   f:8,p:8
 };
 
+// Master numbers are 11, 22 and 33 everywhere in the app (same rule for life path,
+// name numbers, pinnacles and Pythagorean numbers). baseOf() gives the single digit
+// whose table a master number borrows: 11 -> 2, 22 -> 4, 33 -> 6.
+const MASTERS = [11, 22, 33];
+function baseOf(n){ return n === 11 ? 2 : (n === 22 ? 4 : (n === 33 ? 6 : n)); }
+// Compound display: 16/7, 29/11, 49/13/4. Keeps every step so compounds are never lost.
+function chainLabel(raw, keepMaster){
+  const steps = [raw]; let n = raw;
+  while(n > 9){
+    if(keepMaster && MASTERS.includes(n)) break;
+    n = String(n).split('').reduce((a,d)=>a+Number(d),0);
+    steps.push(n);
+  }
+  return steps.length > 1 ? steps.join('/') : String(raw);
+}
+
+// Traditional compound reading (reuses the Chaldean compound table for date-based numbers too).
+function compoundHTML(raw){
+  const m = compoundMeanings[raw];
+  const zero = (raw >= 10 && raw % 10 === 0) ? ` Traditionally the zero is read as an amplifier, strengthening the ${raw/10}.` : '';
+  return m ? `<p style="margin-top:8px;"><b style="color:var(--paper);">${raw} \u2014 ${m[0]}.</b> ${m[1]}${zero} <span style="opacity:.7;">(traditional reading, best taken as a theme)</span></p>` : '';
+}
+// Component method for life path: reduce month, day and year separately (keeping masters), then add.
+// Can show a master (e.g. 2 + 6 + 3 = 11) that adding every digit hides (20/2).
+function lifePathComponent(dobStr){
+  const parts = dobStr.split('-').map(Number);
+  const m = reduceNum(parts[1], true), d = reduceNum(parts[2], true), y = reduceNum(parts[0], true);
+  const raw = m + d + y;
+  return {raw, final: reduceNum(raw, true), label: chainLabel(raw, true), sum: `${m} + ${d} + ${y} = ${raw}`};
+}
+function lifePathExtraHTML(dobStr, lifePath){
+  let out = '';
+  if(MASTERS.includes(lifePath)){
+    out += `<p class="care-note">Many teachers write this as <b>${lifePath}/${baseOf(lifePath)}</b>: you can feel both the master vibration and its ${baseOf(lifePath)} base, and move between them. Others treat ${lifePath} as fully separate.</p>`;
+  }
+  const c = lifePathComponent(dobStr);
+  if(MASTERS.includes(c.final) && c.final !== lifePath){
+    out += `<p class="care-note">Component method (reduce month, day and year first, keeping master numbers): ${c.sum} \u2192 <b>${c.label}</b>. Some teachers would read you as a master ${c.final}, where adding every digit gives ${lifePath}. Both methods are in use, so notice which one fits.</p>`;
+  }
+  return out;
+}
+
+// Birth-day lens: the day of the month, kept master-aware (11, 22, and 29 which adds to 11).
+function ordinal(n){ const v = n % 100; if(v >= 11 && v <= 13) return n + 'th'; return n + (['th','st','nd','rd'][n % 10] || 'th'); }
+function birthDayNote(d){
+  if(d === 11 || d === 22) return `Born on the ${ordinal(d)}, you carry the ${d} master vibration directly. Some teachers treat it as separate from ${baseOf(d)} rather than a louder version of it.`;
+  if(d === 29) return `The ${ordinal(29)} adds to 11 (a master vibration) before reducing to 2, so you carry some of both.`;
+  if(d % 10 === 0) return `The ${ordinal(d)} reduces to ${reduceNum(d,false)}, with the zero traditionally read as an amplifier of that ${d/10}.`;
+  if(d >= 10) return `The ${ordinal(d)} reduces to ${reduceNum(d,false)}, so its energy is a ${reduceNum(d,false)}, with the compound ${d} as a flavor on top.`;
+  return `Your birth day is a single digit, so its energy is a pure ${d}.`;
+}
+
 function reduceNum(n, keepMaster){
   while(n > 9){
-    if(keepMaster && (n === 11 || n === 22)) break;
+    if(keepMaster && MASTERS.includes(n)) break;
     n = String(n).split('').reduce((a,d)=>a+Number(d),0);
   }
   return n;
@@ -835,17 +887,17 @@ function findKarmicDebt(rawTotal){
   let n = rawTotal;
   while(n > 9){
     if(n === 13 || n === 14 || n === 16 || n === 19) return n;
-    if(n === 11 || n === 22) return null;
+    if(MASTERS.includes(n)) return null;
     n = String(n).split('').reduce((a,d)=>a+Number(d),0);
   }
   return (n === 13 || n === 14 || n === 16 || n === 19) ? n : null;
 }
 
 const karmicDebtMeaning = {
-  13:"A karmic debt tied to past avoidance of hard work — this life asks for consistent effort rather than shortcuts, and tends to reward discipline once it's actually built.",
-  14:"A karmic debt tied to past excess or lack of restraint — this life asks for balance and moderation, especially around freedom and impulse.",
-  16:"A karmic debt tied to past pride or ego — this life often includes a humbling event or two that rebuilds you on more honest ground.",
-  19:"A karmic debt tied to past misuse of power — this life asks you to stand on your own strength without leaning on others or using it over them."
+  13:"Traditionally read as a lesson about steady effort: shortcuts tend to cost more than the work, and discipline, once built, tends to pay off. A theme to reflect on, not a verdict.",
+  14:"Traditionally read as a lesson in balance: freedom and impulse tend to work better with moderation and follow-through. A theme to notice, not a fixed fate.",
+  16:"Traditionally read as a lesson in humility: associated with ego being tested and ground being rebuilt more honestly. Many people experience it as a push toward honesty, not a punishment.",
+  19:"Traditionally read as a lesson in self-reliance: standing on your own strength without leaning on others or using it over them. A reflective theme, not a prediction."
 };
 
 // Folds accented letters to their plain base letters (José -> Jose, Álvarez -> Alvarez, Zoë -> Zoe)
@@ -882,12 +934,13 @@ function psychicFromDOB(dobStr){
   return reduceNum(day, false);
 }
 
+// 'birthday' = personal year turns over on your birthday (default); 'calendar' = January 1.
+let yearMethod = 'birthday';
+function effectiveYear(dobStr, refDate){
+  return yearMethod === 'birthday' ? birthdayBasedYear(dobStr, refDate) : refDate.getFullYear();
+}
 function personalYear(dobStr, refDate){
-  const parts = dobStr.split('-').map(Number);
-  const d = parts[2], m = parts[1];
-  const currentYear = refDate.getFullYear();
-  const digits = (''+d+m+currentYear).split('').map(Number);
-  return reduceNum(digits.reduce((a,b)=>a+b,0), false);
+  return personalYearDetail(dobStr, effectiveYear(dobStr, refDate)).reduced;
 }
 
 function personalDay(dobStr, refDate){
@@ -1371,18 +1424,18 @@ function computeCycles(dobStr, lifePathNum, refDate){
   const c2 = Math.abs(rDay-rYear);
   const c3 = Math.abs(c1-c2);
   const c4 = Math.abs(rMonth-rYear);
-  const baseLP = (lifePathNum===11) ? 2 : (lifePathNum===22 ? 4 : lifePathNum);
+  const baseLP = baseOf(lifePathNum);
   const end1 = 36 - baseLP;
   const end2 = end1 + 9;
   const end3 = end2 + 9;
   const age = currentAge(dobStr, refDate);
   const stages = [
-    {label:"First",  pin:p1, chal:c1, from:0,       to:end1, range:`Birth \u2013 ${end1}`},
-    {label:"Second", pin:p2, chal:c2, from:end1+1,  to:end2, range:`${end1+1} \u2013 ${end2}`},
-    {label:"Third",  pin:p3, chal:c3, from:end2+1,  to:end3, range:`${end2+1} \u2013 ${end3}`},
-    {label:"Fourth", pin:p4, chal:c4, from:end3+1,  to:999,  range:`${end3+1} and on`}
+    {label:"First",  pin:p1, pinRaw:rMonth+rDay, chal:c1, from:0,       to:end1, range:`Birth \u2013 ${end1}`},
+    {label:"Second", pin:p2, pinRaw:rDay+rYear, chal:c2, from:end1+1,  to:end2, range:`${end1+1} \u2013 ${end2}`},
+    {label:"Third",  pin:p3, pinRaw:p1+p2, chal:c3, from:end2+1,  to:end3, range:`${end2+1} \u2013 ${end3}`},
+    {label:"Fourth", pin:p4, pinRaw:rMonth+rYear, chal:c4, from:end3+1,  to:999,  range:`${end3+1} and on`}
   ];
-  stages.forEach(s=>{ s.current = (age >= s.from && age <= s.to); });
+  stages.forEach(s=>{ s.current = (age >= s.from && age <= s.to); s.years = s.to >= 999 ? `${y + s.from}+` : `${y + s.from}\u2013${y + s.to}`; });
   return stages;
 }
 
@@ -1446,6 +1499,12 @@ const numberData = {
       practice:"Do the smallest possible version of your biggest idea today — five minutes, nothing more.",
       deep:"Everything about 4 is true for you, but at a larger scale — you're wired to build something that outlasts you, not just get through the week. In relationships, you may hold back from starting something until you're sure it can last, which can mean waiting years longer than you need to. When you're out of balance, this number can tip into paralysis, where the size of the vision stops you from taking the first small step."}
 };
+
+numberData[33] = {planet:"Venus, intensified", color:"Rose & soft gold", swatch:"#D9A0A0", gem:"Rose quartz",
+  purpose:"You carry a pull to teach, heal and care at a scale beyond your own household. Your core work is learning to serve from fullness instead of depletion.",
+  strength:"compassionate leadership and service", growth:"caring for others without abandoning yourself",
+  practice:"Do one quiet act of care for someone today, then one equally small act for yourself.",
+  deep:"Everything about 6 is true for you, but amplified: people tend to bring you their troubles. In work, you do best where care has real structure around it. In relationships, you may over-give and call it love. When you're out of balance, this number can tip into martyrdom, or resentment that you're always the one holding everyone up."};
 
 const personalYearNeed = {
   1: {title:"A year of starting again", body:"This year is asking you to begin something, even imperfectly — a routine, a project, a version of yourself you've been circling for a while. If money feels tight or direction feels unclear right now, that's not a sign you're behind; it's the discomfort that comes right before a new beginning takes shape.",
@@ -1517,8 +1576,9 @@ const friendEnemyData = {
 
 function friendEnemyFor(lifePathNum){
   let baseKey = lifePathNum, intro = "";
-  if(lifePathNum === 11){ baseKey = 2; intro = "Because 11 is 2 intensified, the same pattern applies — just louder. "; }
-  if(lifePathNum === 22){ baseKey = 4; intro = "Because 22 is 4 intensified, the same pattern applies — just at a larger scale. "; }
+  if(lifePathNum === 11){ baseKey = 2; intro = "Many traditions read 11 as a heightened 2 (some teachers treat it as its own separate vibration), so the same pattern is a starting point here, just louder. "; }
+  if(lifePathNum === 22){ baseKey = 4; intro = "Many traditions read 22 as a heightened 4 (some teachers treat it as its own separate vibration), so the same pattern is a starting point here, at a larger scale. "; }
+  if(lifePathNum === 33){ baseKey = 6; intro = "Many traditions read 33 as a heightened 6 (some teachers treat it as its own separate vibration), so the same pattern is a starting point here, amplified. "; }
   const fe = friendEnemyData[baseKey];
   return {friends:fe.friends, neutral:fe.neutral, enemies:fe.enemies, note: intro + fe.note};
 }
@@ -1573,12 +1633,14 @@ const brandData = {
   22:{archetype:"Legacy-building, large-vision brands", fits:["SpaceX","Habitat for Humanity"], mismatch:"anything disposable, made to be used once and thrown away"}
 };
 
+brandData[33] = {archetype:"Service-first, care-at-scale brands", fits:["Khan Academy","charity: water"], mismatch:"brands that treat people as numbers, with no real sense of care behind them"};
+
 // One rulebook for the whole app: the same friend / neutral / enemy table that drives the
 // "Numbers that tend to get along" grid also drives the name checks and compatibility tool.
 function harmonyText(lifePathNum, otherNum){
   const fe = friendEnemyFor(lifePathNum);
   const other = reduceNum(otherNum, true);
-  const key = (other === 11) ? 2 : (other === 22 ? 4 : other);
+  const key = baseOf(other);
   if(fe.friends.includes(key)){
     return {category:"friend", tone:"a friend number, flows smoothly", text:"This number sits comfortably beside your life path \u2014 it should feel like it moves with you rather than against you."};
   }
@@ -1690,8 +1752,22 @@ function renderFriendEnemyHTML(lifePathNum){
         <div class="chips">${fe.enemies.map(n=>chip(n,'enemy')).join('')}</div>
       </div>
     </div>
-    <p style="margin-top:16px; font-size:13px; color:var(--muted); line-height:1.6;">${fe.note}</p>
+    <p style="margin-top:16px; font-size:13px; color:var(--muted); line-height:1.6;">${fe.note} Compatibility tables differ between schools (for example, some modern teachers treat 4 and 5 as enemies and 4 and 9 as friends, the reverse of this Chaldean-style table), so read these as tendencies, not rules.</p>
   `;
+}
+
+function renderClashYearNote(animal){
+  const art = animal === 'Ox' ? 'an' : 'a';
+  const now = new Date();
+  const curY = chineseYearFor(now.getFullYear(), now.getMonth()+1, now.getDate());
+  const curAnimal = zodiacForYear(curY);
+  const clash = clashMap[animal];
+  if(curAnimal === clash){
+    return `<p style="margin-top:10px;">This Chinese year is the Year of the ${curAnimal}, the traditional clash for ${art} ${animal}. Many practitioners read a clash year as one for steadier choices and fewer big gambles. A lens, not a prediction.</p>`;
+  }
+  let next = null;
+  for(let y = curY + 1; y <= curY + 12; y++){ if(zodiacForYear(y) === clash){ next = y; break; } }
+  return `<p style="margin-top:10px;">This is the Year of the ${curAnimal}. The next clash year for ${art} ${animal} is the Year of the ${clash}, beginning in ${next} (the Chinese year starts at Lunar New Year, not January 1).</p>`;
 }
 
 function renderTraditionsHTML(name, dobStr, lifePathNum, py){
@@ -1745,80 +1821,6 @@ function wireKuaCheck(dobStr){
   });
 }
 
-
-async function wireFengShuiTool(lifePathNum, dobStr){
-  const panel = document.getElementById('fengShuiPanel');
-  if(!panel) return;
-  // Only exists inside the claude.ai artifact viewer; a plain static host (e.g. Render)
-  // has no window.claude at all, so this must fail silently and hide the panel, not error.
-  if(typeof window.claude === 'undefined' || typeof window.claude.use !== 'function') return;
-
-  let sample;
-  try{
-    sample = await window.claude.use('sample');
-  }catch(e){ return; }
-  if(!sample) return;
-
-  let limits;
-  try{
-    limits = await sample.limits();
-  }catch(e){ return; }
-  if(!limits || !limits.images) return;
-
-  // Only reveal the feature once we've confirmed it can actually run.
-  panel.style.display = 'block';
-  const fileInput = document.getElementById('fengShuiFile');
-  fileInput.accept = limits.images.mediaTypes.join(',');
-
-  const btn = document.getElementById('fengShuiBtn');
-  const result = document.getElementById('fengShuiResult');
-  const lp = numberData[lifePathNum];
-  const birthYear = Number(dobStr.split('-')[0]);
-  const element = elementForYear(chineseYearForStr(dobStr));
-  const kua = kuaData[kuaNumber(kuaYearFor(dobStr), 'female')]; // direction guidance is the useful part either way
-
-  btn.addEventListener('click', async ()=>{
-    const file = fileInput.files && fileInput.files[0];
-    if(!file){
-      result.style.display = 'block';
-      result.textContent = 'Choose a photo first.';
-      return;
-    }
-    btn.disabled = true;
-    result.style.display = 'block';
-    result.textContent = 'Thinking...';
-
-    const prompt = `You're shown a photo of a room in someone's home. Give a warm, practical feng shui read of this SPECIFIC photo \u2014 call out what you actually see (clutter, furniture placement relative to doors, lighting, what's in the command position, colors present, which of the five elements show up too much or too little) and 2-3 concrete, doable changes that would improve the room's flow. Stay specific to what's visible rather than generic advice.
-
-For light personalization, this person's own numerology: life path ${lifePathNum} (${lp.strength}), Chinese element ${element}, and their feng shui-favorable direction is ${kua.direction} \u2014 mention it only if it's naturally relevant to how the room could be arranged.
-
-Plain language, warm tone, about 150-250 words. No headers or bullet lists \u2014 flowing prose.`;
-
-    try{
-      const { text } = await sample(prompt, {
-        images: file,
-        modelTier: 'default',
-        cache: false,
-        onText: ({text}) => { result.textContent = text; }
-      });
-      result.textContent = text;
-    }catch(e){
-      const messages = {
-        not_granted: "This needs your permission to let the page ask Claude something \u2014 if you declined that prompt, reload and allow it to try again.",
-        images_unavailable: "This view can't send images to Claude right now.",
-        image_rejected: "That file didn't work \u2014 try a JPEG, PNG, WebP, or GIF under 20MB.",
-        rate_limited: "Too many requests right now \u2014 wait a moment and try again.",
-        session_expired: "You'll need to sign back in to claude.ai to use this.",
-        refused: "Claude declined to analyze that image.",
-        empty_completion: "That didn't produce a result \u2014 try a clearer or better-lit photo.",
-        sampling_disabled: "Claude isn't available for this account right now.",
-      };
-      result.textContent = messages[e.code] || (e.text || "Something went wrong \u2014 try again.");
-    }finally{
-      btn.disabled = false;
-    }
-  });
-}
 
 /* ---------------------------------------------------------
    FENG SHUI TAB — room photo read via the app's own server
@@ -2077,6 +2079,230 @@ function wireRisingSignTool(dobStr){
   });
 }
 
+
+/* ---------------------------------------------------------
+   PERSONAL YEAR CYCLE (9-year cycle, compound numbers, navigation)
+   Method: birth month + birth day + the calendar year, every digit added,
+   then reduced. The compound (e.g. 13) is kept before the reduction (13/4).
+--------------------------------------------------------- */
+function personalYearDetail(dobStr, year){
+  const parts = dobStr.split('-').map(Number);
+  const m = parts[1], d = parts[2];
+  const digits = (''+m+d+year).split('').map(Number);
+  const raw = digits.reduce((a,b)=>a+b,0);
+  const reduced = reduceNum(raw, false);
+  const karmic = findKarmicDebt(raw);
+  const label = chainLabel(raw, false);
+  const sum = digits.join(' + ') + ' = ' + raw + (raw > 9 ? ' \u2192 ' + reduced : '');
+  return {year, raw, reduced, karmic, label, sum};
+}
+
+// Many numerologists start the personal year on the birthday, not on January 1.
+// Before this year's birthday, the birthday-based year is still last year's.
+function birthdayBasedYear(dobStr, refDate){
+  const [y,m,d] = dobStr.split('-').map(Number);
+  const had = (refDate.getMonth()+1 > m) || (refDate.getMonth()+1 === m && refDate.getDate() >= d);
+  return had ? refDate.getFullYear() : refDate.getFullYear() - 1;
+}
+
+const cycleGuide = {
+  1: {phase:"Seed \u2014 year 1 of 9", theme:"New beginnings",
+      go:["Start the thing you keep circling, even imperfectly","Make decisions on your own authority","Plant habits you want to still have in nine years"],
+      ease:["Waiting for permission or perfect timing","Dragging last cycle's leftovers into this one"],
+      ask:"What do I want to begin that I'd be proud of nine years from now?"},
+  2: {phase:"Sprout \u2014 year 2 of 9", theme:"Patience and partnership",
+      go:["Tend what you planted last year rather than starting more","Listen, collaborate, repair relationships","Let timing do some of the work"],
+      ease:["Forcing results that aren't ripe","Swallowing your needs to keep the peace"],
+      ask:"Where am I pushing, when I could be nurturing?"},
+  3: {phase:"Bloom \u2014 year 3 of 9", theme:"Expression and joy",
+      go:["Create, write, speak, show your work","Say yes to social invitations that feel alive","Play deliberately, it feeds the rest of the cycle"],
+      ease:["Scattering energy across ten projects","Using humor to dodge a real conversation"],
+      ask:"What am I holding back from saying or making?"},
+  4: {phase:"Foundation \u2014 year 4 of 9", theme:"Structure and hard work",
+      go:["Build systems: budget, paperwork, routines, health basics","Finish the unglamorous tasks you've postponed","Commit to a slow, steady pace"],
+      ease:["Looking for shortcuts","Overworking until the year feels like a grind"],
+      ask:"What one foundation, if solid, would make everything else easier?"},
+  5: {phase:"Turning point \u2014 year 5 of 9", theme:"Change and freedom",
+      go:["Travel, move, switch methods, widen your circle","Say yes to a change you've been avoiding out of fear","Keep your options open"],
+      ease:["Impulsive leaps made only to escape discomfort","Overcommitting to everything at once"],
+      ask:"What change am I ready for that I've been calling a risk?"},
+  6: {phase:"Harvest of care \u2014 year 6 of 9", theme:"Home, family, responsibility",
+      go:["Invest in home, family, community","Mend or deepen close bonds","Set boundaries so care doesn't turn into overload"],
+      ease:["Taking on other people's problems as your own","Neglecting yourself while looking after everyone"],
+      ask:"Who needs my care, and who is it okay to say no to?"},
+  7: {phase:"Reflection \u2014 year 7 of 9", theme:"Inner work and study",
+      go:["Study, research, rest, spend time alone","Review your beliefs and your health","Trust slow answers"],
+      ease:["Big launches or major financial gambles","Isolating from people who are safe to let in"],
+      ask:"What do I actually believe, and what do I actually want?"},
+  8: {phase:"Reward \u2014 year 8 of 9", theme:"Power, money, results",
+      go:["Go after promotions, pricing, contracts, investments","Take visible, organized action","Use authority fairly, results tend to be amplified"],
+      ease:["Measuring your worth by output alone","Cutting corners, consequences show up faster this year"],
+      ask:"What am I building, and what is it worth to me beyond money?"},
+  9: {phase:"Completion \u2014 year 9 of 9", theme:"Release and closure",
+      go:["Finish, forgive, donate, clear out","Let go of what no longer fits (people, habits, objects)","Give your time and wisdom away"],
+      ease:["Starting big new ventures, the seed year is next","Holding on out of guilt instead of readiness"],
+      ask:"What is genuinely finished, and what am I still carrying?"}
+};
+
+const compoundNote = {
+  10:"10 is a wheel of fortune number: a reset, luck turning, a new round beginning.",
+  12:"12 asks you to see the bigger picture and avoid being a martyr to circumstances.",
+  13:"13 is a karmic debt number: progress comes through steady effort, not shortcuts.",
+  14:"14 is a karmic debt number: freedom works best with moderation and follow-through.",
+  15:"15 carries charm, magnetism and temptation: stay clear about values.",
+  16:"16 is a karmic debt number: a humbling or rebuilding event tends to clear false ground.",
+  17:"17 supports long-range plans and quiet confidence.",
+  18:"18 asks you to resolve conflict and not carry old emotional fights.",
+  19:"19 is a karmic debt number: stand on your own feet without using or leaning on others.",
+  20:"20 favors cooperation and patient waiting, awakening to teamwork.",
+  21:"21 signals completion of a major stretch, with rewards for work done.",
+  22:"22 is a master number: a pull toward building something practical and lasting.",
+  11:"11 is a master number: heightened intuition. Many readers also work with its 2 energy."
+};
+
+function personalYearCycleYears(dobStr, refYear){
+  let start = refYear;
+  for(let i=0;i<9;i++){
+    if(personalYearDetail(dobStr, start).reduced === 1) break;
+    start--;
+  }
+  const out = [];
+  for(let i=0;i<9;i++) out.push(personalYearDetail(dobStr, start+i));
+  return out;
+}
+
+function universalYear(year){
+  const raw = (''+year).split('').reduce((a,b)=>a+Number(b),0);
+  return {year, raw, reduced: reduceNum(raw, false), label: chainLabel(raw, false)};
+}
+function fmtShort(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function fmtLongDate(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function daysIn(y, mo){ return new Date(y, mo+1, 0).getDate(); }
+
+// Start date of personal month i (0-11) in cycle year yr. i = 12 gives the start of next year.
+// Birthday method: month 1 begins on the birthday date. Calendar method: month 1 begins Jan 1.
+function monthStartDate(dobStr, yr, i){
+  const parts = dobStr.split('-').map(Number);
+  const bm = parts[1], bd = parts[2];
+  if(yearMethod === 'birthday'){
+    const mo = bm - 1 + i;
+    const y2 = yr + Math.floor(mo/12), m2 = mo % 12;
+    return new Date(y2, m2, Math.min(bd, daysIn(y2, m2)));
+  }
+  return new Date(yr, i, 1);
+}
+function personalMonthPeriods(dobStr, refDate){
+  const yr = effectiveYear(dobStr, refDate);
+  const py = personalYearDetail(dobStr, yr).reduced;
+  const periods = [];
+  for(let i=0;i<12;i++) periods.push({i, start: monthStartDate(dobStr, yr, i), num: reduceNum(py + i + 1, false)});
+  let cur = 0;
+  periods.forEach((p,i)=>{ if(p.start <= refDate) cur = i; });
+  return {periods, cur, py, year: yr};
+}
+function personalMonthNext(dobStr, refDate){
+  const pm = personalMonthPeriods(dobStr, refDate);
+  if(pm.cur < 11) return pm.periods[pm.cur + 1];
+  const pyNext = personalYearDetail(dobStr, pm.year + 1).reduced;
+  return {start: monthStartDate(dobStr, pm.year, 12), num: reduceNum(pyNext + 1, false)};
+}
+
+// Some teachers reduce month, day and year separately (keeping masters) and then add.
+// This can reveal a master personal year (e.g. 11 + 9 + 9 = 29/11) that adding every digit hides (20/2).
+function personalYearComponent(dobStr, year){
+  const parts = dobStr.split('-').map(Number);
+  const m = reduceNum(parts[1], true), d = reduceNum(parts[2], true), y = reduceNum(year, true);
+  const raw = m + d + y;
+  return {m, d, y, raw, label: chainLabel(raw, true), final: reduceNum(raw, true), sum: `${m} + ${d} + ${y} = ${raw}`};
+}
+
+function renderPersonalYearCycleHTML(dobStr, refDate){
+  const birthdayMode = yearMethod === 'birthday';
+  const yr = effectiveYear(dobStr, refDate);
+  const cal = personalYearDetail(dobStr, yr);
+  const g = cycleGuide[cal.reduced];
+  const uni = universalYear(refDate.getFullYear());
+  const ug = cycleGuide[uni.reduced];
+  const pm = personalMonthPeriods(dobStr, refDate);
+  const yStart = monthStartDate(dobStr, yr, 0);
+  const nextStart = monthStartDate(dobStr, yr, 12);
+  const yEnd = new Date(nextStart.getFullYear(), nextStart.getMonth(), nextStart.getDate() - 1);
+  const otherYear = birthdayMode ? refDate.getFullYear() : birthdayBasedYear(dobStr, refDate);
+  const other = personalYearDetail(dobStr, otherYear);
+  const otherName = birthdayMode ? 'January 1' : 'birthday-based';
+  const methodNote = other.label === cal.label
+    ? `Both methods agree right now: ${cal.label}.`
+    : `The ${otherName} method would give you <b>${other.label}</b> (${other.sum}). Both schools exist, so try each for a year and see which one matches your experience.`;
+  const comp = personalYearComponent(dobStr, yr);
+  const compNote = MASTERS.includes(comp.final)
+    ? `<p class="care-note" style="margin-top:6px;">Component method (reduce month, day and year first, keeping master numbers): ${comp.sum} \u2192 <b>${comp.label}</b>. Some teachers read this as a master ${comp.final} personal year, where adding every digit gives ${cal.label}. Both are in use, so notice which one fits.</p>`
+    : '';
+  const stage = computeCycles(dobStr, lifePathFromDOB(dobStr), refDate).find(x=>x.current);
+  const layered = stage
+    ? `<p>You are in your ${stage.label.toLowerCase()} pinnacle, <b style="color:var(--paper);">${chainLabel(stage.pinRaw, true)}</b> (ages ${stage.range}), with a challenge number of ${stage.chal}. Inside it, your personal year is <b style="color:var(--paper);">${cal.label}</b> and the universal year is <b style="color:var(--paper);">${uni.label}</b>. Read them in layers: the pinnacle is the chapter, the universal year is the shared backdrop, your personal year is this year's weather, and the personal month is the mood of the stretch you are in now.</p>`
+    : '';
+  const chips = pm.periods.map(p=>{
+    const lab = birthdayMode ? fmtShort(p.start) : p.start.toLocaleDateString('en-US',{month:'short'});
+    const on = p.i === pm.cur;
+    return `<span style="display:inline-block;min-width:54px;margin:3px 6px 3px 0;padding:5px 8px;border-radius:8px;border:1px solid ${on?'var(--amber)':'rgba(255,255,255,.12)'};${on?'color:var(--amber);':''}text-align:center;font-size:13px;">${lab}<br><b>${p.num}</b></span>`;
+  }).join('');
+  const curP = pm.periods[pm.cur];
+  const timeline = personalYearCycleYears(dobStr, yr).map(y=>{
+    const gi = cycleGuide[y.reduced];
+    const here = y.year === yr;
+    return `<div class="cycle-card ${here?'current':''}" style="margin-top:10px;">
+      <div class="cycle-head"><span class="cycle-stage">${y.year}${here?' \u00b7 you are here':''}</span><span class="cycle-age">${y.label}</span></div>
+      <p class="cycle-theme" style="margin:0;"><b style="color:var(--paper);">${gi.theme}</b>${y.karmic?' \u00b7 karmic debt '+y.karmic:''}</p>
+    </div>`;
+  }).join('');
+  const compound = cal.raw > 9 ? (compoundMeanings[cal.raw] ? compoundHTML(cal.raw) : (compoundNote[cal.raw] ? `<p style="margin-top:10px;">${compoundNote[cal.raw]}</p>` : '')) : '';
+  const karmic = cal.karmic ? `<p style="margin-top:10px;"><b style="color:var(--paper);">Karmic debt ${cal.karmic}.</b> ${karmicDebtMeaning[cal.karmic]}</p>` : '';
+  return `
+    <div class="panel">
+      <p class="kicker">Personal year \u00b7 ${fmtLongDate(yStart)} to ${fmtLongDate(yEnd)}</p>
+      <p class="big-number">${cal.label}</p>
+      <h2>${g.phase}</h2>
+      <p class="subhead">${g.theme}. The math: birth month + birth day + ${yr}, every digit added: <b>${cal.sum}</b>.</p>
+      <div class="mood-row" id="yearMethodToggle" style="margin:12px 0 6px;">
+        <button type="button" class="mood-chip ym-btn ${birthdayMode?'sel':''}" data-method="birthday">Starts on my birthday</button>
+        <button type="button" class="mood-chip ym-btn ${birthdayMode?'':'sel'}" data-method="calendar">Starts January 1</button>
+      </div>
+      <p class="care-note" style="margin-top:6px;">${methodNote}</p>
+      ${compNote}
+      ${compound}${karmic}
+
+      <h3 style="margin-top:20px;">The layers right now</h3>
+      <p>The universal year ${uni.year} is <b style="color:var(--paper);">${uni.label}</b>: ${ug.theme.toLowerCase()} is the shared backdrop for everyone. Your personal ${cal.label} plays out inside it.</p>
+      ${layered}
+
+      <h3 style="margin-top:20px;">How to move through this year</h3>
+      <p><b style="color:var(--paper);">Lean into</b></p>
+      <ul class="today-list">${g.go.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <p style="margin-top:10px;"><b style="color:var(--paper);">Go easy on</b></p>
+      <ul class="today-list">${g.ease.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <p style="margin-top:12px;"><b style="color:var(--paper);">Question for the year:</b> ${g.ask}</p>
+
+      <h3 style="margin-top:22px;">Your twelve personal months</h3>
+      <p class="subhead">${birthdayMode ? 'Month 1 begins on your birthday date each year; each chip shows the day that personal month starts.' : 'Personal month = personal year + calendar month, reduced.'} The current one is <b style="color:var(--amber);">${curP.num}</b>: ${monthFocus[curP.num]}</p>
+      <div>${chips}</div>
+
+      <h3 style="margin-top:22px;">Where you are in the 9-year cycle</h3>
+      <p class="subhead">The cycle runs 1 through 9, then restarts. Year 1 plants, years 2 to 4 build, 5 turns, 6 to 8 harvest and reflect, 9 clears the ground. Plan big launches for 1 and 8, rest in 7, finish things in 9.</p>
+      ${timeline}
+      <p class="care-note">A reflective lens, not a forecast. The year number describes the weather, you still choose what to do in it.</p>
+    </div>`;
+}
+
+function wireYearMethodToggle(){
+  document.querySelectorAll('.ym-btn').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      yearMethod = b.dataset.method;
+      await storageSet('settings:yearMethod', yearMethod);
+      renderReading();
+    });
+  });
+}
+
 function renderCyclesHTML(lifePathNum, dobStr, refDate){
   const stages = computeCycles(dobStr, lifePathNum, refDate);
   return stages.map(s=>{
@@ -2086,9 +2312,9 @@ function renderCyclesHTML(lifePathNum, dobStr, refDate){
       <div class="cycle-card ${s.current?'current':''}">
         <div class="cycle-head">
           <span class="cycle-stage">${s.label} pinnacle</span>
-          <span class="cycle-age">Ages ${s.range}${s.current?' \u00b7 you are here':''}</span>
+          <span class="cycle-age">Ages ${s.range} (about ${s.years})${s.current?' \u00b7 you are here':''}</span>
         </div>
-        <div class="cycle-num">${s.pin}</div>
+        <div class="cycle-num">${chainLabel(s.pinRaw, true)}</div>
         <p class="cycle-theme">Leans on your ${pinInfo.strength}.</p>
         <p class="cycle-challenge"><b>Watch for:</b> ${chalText}</p>
       </div>
@@ -2117,10 +2343,84 @@ function renderBestWorstDaysHTML(lifePathNum){
       <span><b>Neutral:</b> ${dates.neutral.join(', ')}</span>
     </div>
     <p class="care-note">These repeat every single week and month, forever \u2014 they're the broad pattern. Your Today screen's Personal Day number is the sharper, date-specific version of this same idea; check that each morning rather than just leaning on the weekly pattern alone.</p>
+    <p class="care-note">Please never move a medical appointment, procedure or delivery date because of a number. Follow your clinicians.</p>
   `;
 }
 
 function renderColorGuidanceHTML(lifePathNum){
+  const fe = friendEnemyFor(lifePathNum);
+  const words = ['red','orange','yellow','green','blue','purple','pink','brown','black','white','gray','gold','silver'];
+  const info = words.map(w=>{
+    const raw = w.split('').reduce((a,c)=>a + (pythagoreanMap[c]||0), 0);
+    return {w, label: chainLabel(raw, true), n: reduceNum(raw, false)};
+  });
+  const fmt = list => list.length ? list.map(c=>`${c.w[0].toUpperCase()+c.w.slice(1)} (${c.label})`).join(' \u00b7 ') : 'none stand out';
+  const lean = info.filter(c=>classifyForLifePath(c.n, fe) === 'friend');
+  const easy = info.filter(c=>classifyForLifePath(c.n, fe) === 'enemy');
+  return renderColorGuidanceBaseHTML(lifePathNum) + `
+    <h3 style="margin-top:16px;">Color words, by letter count</h3>
+    <p class="subhead">Another lens: add up the letters in a color's name (Pythagorean table) and compare that number with your friend and enemy numbers.</p>
+    <p><b style="color:var(--paper);">Leans toward you:</b> ${fmt(lean)}</p>
+    <p><b style="color:var(--paper);">Further from your register:</b> ${fmt(easy)}</p>
+    <p class="care-note">Playful, not a rule. Wear what you like.</p>`;
+}
+
+function renderLuckyHTML(dobStr, refDate){
+  const parts = dobStr.split('-');
+  const lucky = String(Number(parts[1])).charAt(0) + parts[0].slice(-1);
+  const n = Number(lucky);
+  const today = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+  let d = new Date(refDate.getFullYear(), 0, n);
+  if(d < today) d = new Date(refDate.getFullYear() + 1, 0, n);
+  return `
+    <h3 style="margin-top:22px;">Lucky number and lucky day</h3>
+    <p class="subhead">One popular method: the first digit of your birth month followed by the last digit of your birth year.</p>
+    <p>Your lucky number is <b style="color:var(--amber);">${lucky}</b>. Day ${n} of the year lands on <b style="color:var(--paper);">${fmtLongDate(d)}</b>, a pleasant date to begin something small on purpose. For fun, not a forecast.</p>`;
+}
+
+const houseMeaning = {
+  1:"independent and self-starting. Good for building something of your own, and it can feel isolating.",
+  2:"quiet, paired and restful. Suits partnership and peace, and can feel a little passive.",
+  3:"social and chatty, a natural gathering place. Suits creative work and hosting, and may feel unsettled if you want solitude.",
+  4:"orderly and productive. Suits routine, study and career building, and can feel rigid.",
+  5:"lively and in motion. Suits people who travel or like variety, and can be hard to settle into.",
+  6:"a family and community home. Suits caring for others, and can feel like a lot of responsibility.",
+  7:"private, reflective and quiet. Suits study and rest, and can feel solitary.",
+  8:"driven and results-oriented. Suits business and ambition, and can feel pressured.",
+  9:"open and transitional. Suits generosity and letting go, and can feel like a place you pass through."
+};
+function renderHouseLensHTML(){
+  return `
+    <h3 style="margin-top:22px;">Your home number</h3>
+    <p class="subhead">Add the digits of a house or apartment number and read it against your life path.</p>
+    <div class="namecheck" style="display:block;">
+      <div class="inner">
+        <input type="text" id="houseInput" placeholder="House or apartment number, like 25">
+        <button class="ghost" id="houseBtn" type="button">Read it</button>
+      </div>
+      <div class="namecheck-result" id="houseResult"></div>
+    </div>`;
+}
+function wireHouseLens(lifePath){
+  const btn = document.getElementById('houseBtn');
+  const input = document.getElementById('houseInput');
+  const result = document.getElementById('houseResult');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const digits = input.value.replace(/\D/g,'');
+    if(!digits) return;
+    const raw = digits.split('').reduce((a,c)=>a + Number(c), 0);
+    const n = reduceNum(raw, false);
+    const cls = classifyForLifePath(n, friendEnemyFor(lifePath));
+    const rel = cls === 'friend' ? `A ${n} sits comfortably with your life path.`
+              : cls === 'enemy' ? `A ${n} sits a bit further from your natural rhythm. Small touches (light, plants, color) can balance it.`
+              : `A ${n} is neutral next to your life path.`;
+    result.innerHTML = `<b style="color:var(--amber);">${escHtml(digits)}</b> adds to <b style="color:var(--amber);">${chainLabel(raw, false)}</b>: ${houseMeaning[n]}<br><br>${rel}<br><br><span style="opacity:.75;">Plenty of homes work well whatever their number, so this is a lens, not a reason to move.</span>`;
+    result.classList.add('show');
+  });
+}
+
+function renderColorGuidanceBaseHTML(lifePathNum){
   const fe = friendEnemyFor(lifePathNum);
   const ownColor = numberData[lifePathNum].color;
   const wearColors = fe.friends.filter(n=>n!==lifePathNum).map(n=>numberData[n].color);
@@ -2385,12 +2685,10 @@ function renderMoreNumbersHTML(name, lifePath, py, refDate){
   const missing = [1,2,3,4,5,6,7,8,9].filter(d=>!counts[d]);
   const top = Math.max(...Object.values(counts));
   const passion = Object.keys(counts).filter(d=>counts[d]===top).map(Number).sort((a,b)=>a-b);
-  const month = refDate.getMonth()+1;
-  const pmNow = reduceNum(py + month, false);
-  const nextRef = new Date(refDate.getFullYear(), month, 1);
-  const pyNext = personalYear(profile.dob, nextRef);
-  const pmNext = reduceNum(pyNext + (nextRef.getMonth()+1), false);
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const pmInfo = personalMonthPeriods(profile.dob, refDate);
+  const pmCur = pmInfo.periods[pmInfo.cur];
+  const pmNxt = personalMonthNext(profile.dob, refDate);
+  const pmNow = pmCur.num, pmNext = pmNxt.num;
   const lessons = missing.length
     ? missing.map(d=>`<div class="row"><span><b style="color:var(--paper);">${d}</b> \u2014 ${lessonMeaning[d]}</span></div>`).join('')
     : `<p>No digit from 1 to 9 is missing from your name, so there are no karmic lessons in this system.</p>`;
@@ -2399,7 +2697,7 @@ function renderMoreNumbersHTML(name, lifePath, py, refDate){
       <h2>More from your name and your timing</h2>
       <p class="subhead">These four use the Pythagorean letter table (A=1 through I=9, then repeating), which is how they are normally taught, so they can differ from the Chaldean name number above.</p>
 
-      <h3 style="margin-top:18px;"><span class="num">${maturity}</span>Maturity number</h3>
+      <h3 style="margin-top:18px;"><span class="num">${maturity}</span>Maturity number (Pythagorean)</h3>
       <p>Your life path (${lifePath}) combined with your name's expression number (${expression}). Traditionally it grows more noticeable from around your mid-thirties or forties onward. The theme it points to: <b style="color:var(--paper);">${numberData[mKey].strength}</b>.</p>
 
       <h3 style="margin-top:22px;">Karmic lessons (digits missing from your name)</h3>
@@ -2410,8 +2708,8 @@ function renderMoreNumbersHTML(name, lifePath, py, refDate){
       <p>${passion.length===1 ? `The digit that appears most in your name is <b style="color:var(--amber);">${passion[0]}</b> (${top} times)` : `The digits that tie for most frequent in your name are <b style="color:var(--amber);">${passion.join(', ')}</b> (${top} times each)`}. Traditionally this marks a talent or drive you lean on heavily: ${passion.map(d=>numberData[d].strength).join('; ')}.</p>
 
       <h3 style="margin-top:22px;">Personal month</h3>
-      <p>${monthNames[month-1]} is a personal month <b style="color:var(--amber);">${pmNow}</b> for you: ${monthFocus[pmNow]} ${monthNames[nextRef.getMonth()]} will be a ${pmNext}: ${monthFocus[pmNext]}</p>
-      <p class="care-note">Personal month = your personal year plus the calendar month, reduced to one digit. Treat all of this as a reflective lens, not a forecast.</p>
+      <p>The personal month starting ${fmtShort(pmCur.start)} is a <b style="color:var(--amber);">${pmNow}</b> for you: ${monthFocus[pmNow]} The next one, starting ${fmtShort(pmNxt.start)}, will be a ${pmNext}: ${monthFocus[pmNext]}</p>
+      <p class="care-note">${yearMethod==='birthday' ? 'Personal months run from your birthday date each month: month 1 begins on your birthday. ' : 'Personal month = your personal year plus the calendar month, reduced to one digit. '}Treat all of this as a reflective lens, not a forecast.</p>
     </div>`;
 }
 
@@ -2421,6 +2719,7 @@ function renderKarmicBlock(karmicValue, subjectLabel){
     <div class="karmic-note">
       <p class="kicker">Karmic debt number ${karmicValue}, on your ${subjectLabel}</p>
       <p>${karmicDebtMeaning[karmicValue]}</p>
+      <p class="care-note">Karmic debt is a traditional idea, not something that can be verified. Use it as a prompt for reflection.</p>
     </div>
   `;
 }
@@ -2509,6 +2808,7 @@ function renderAstrologyHTML(dobStr){
     </div>
     <p style="margin-top:14px;">${elementBlurb[info.element]}</p>
     <p style="margin-top:8px;">${modalityBlurb[info.modality]}</p>
+    <p style="margin-top:8px;">${(function(){const i=ZODIAC_ORDER.indexOf(sign); const t1=ZODIAC_ORDER[(i+4)%12], t2=ZODIAC_ORDER[(i+8)%12], opp=ZODIAC_ORDER[(i+6)%12]; return '<b style="color:var(--paper);">Easiest company:</b> the other '+info.element.toLowerCase()+' signs, '+t1+' and '+t2+', share your rhythm. <b style="color:var(--paper);">Most friction and pull:</b> '+opp+', directly opposite you. Opposites often attract and take more deliberate effort.';})()}</p>
     <p class="care-note">This is your Sun sign, calculated from where the Sun actually was on your birth date — the broadest, most widely known layer of a chart. The date ranges shown are typical; the exact changeover moves by up to a day from year to year.</p>
 
     <details class="namecheck" style="margin-top:18px;">
@@ -2550,6 +2850,7 @@ function renderAstrologyHTML(dobStr){
     <p style="margin-top:14px;"><b style="color:var(--paper);">The five elements.</b> Your element is <b style="color:var(--amber);">${element}</b>. In the traditional generating cycle, ${cyc.generatedBy} feeds ${element}, and ${element} in turn feeds ${cyc.generates}. In the controlling cycle, ${element} keeps ${cyc.overcomes} in check, while ${cyc.overcomeBy} keeps ${element} in check — a built-in balance, not a hierarchy.</p>
 
     <p style="margin-top:14px;"><b style="color:var(--paper);">Compatibility.</b> ${animal} traditionally moves easily alongside ${trineMates} — together the three of you form what's called a trine, sharing a similar rhythm. The traditional clash animal is ${clash}, sitting directly opposite ${animal} in the cycle — not a doom sign, just a pairing that tends to take more deliberate effort.</p>
+    ${renderClashYearNote(animal)}
 
     <details class="namecheck" style="margin-top:18px;">
       <summary>Find your Kua number and best direction (feng shui)</summary>
@@ -2590,12 +2891,14 @@ function renderReading(){
       <div>
         <p class="hero-line">Your reading</p>
         <h1 class="headline">${titleCase(profile.name)}</h1>
-        <p class="lede">Born ${fmtDate(new Date(profile.dob+'T00:00:00'))}. Here's what your numbers say about how you're built, what this year is asking of you, and one real thing to do about it.</p>
+        <p class="lede">Born ${fmtDate(new Date(profile.dob+'T00:00:00'))}. Here's what your numbers suggest, as a reflective lens, about how you're built, what this year is asking of you, and one real thing to do about it.</p>
       </div>
 
       <div class="panel">
         <p class="kicker">Life path — ruled by ${lp.planet}</p>
-        <p class="big-number">${lifePath}</p>
+        <p class="big-number">${chainLabel(lifePathRawTotal(profile.dob), true)}</p>
+        ${lifePathRawTotal(profile.dob) > 9 ? `<p class="subhead">Your birth-date digits add to ${lifePathRawTotal(profile.dob)}, which reduces to ${lifePath}. Many traditions read the compound as extra nuance on top of the ${lifePath}.</p>${compoundHTML(lifePathRawTotal(profile.dob))}` : ''}
+        ${lifePathExtraHTML(profile.dob, lifePath)}
         <h2>Your core purpose</h2>
         <p>${lp.purpose}</p>
         <div class="meta-row">
@@ -2623,14 +2926,16 @@ function renderReading(){
         <p>Numerology draws a line between how you come across day to day, and what's quietly steering you underneath. Both are true at once.</p>
         <div class="twin" style="margin-top:18px;">
           <div class="cell">
-            <h3><span class="num">${psychic}</span>Psychic number</h3>
+            <h3><span class="num">${chainLabel(Number(profile.dob.split('-')[2]), false)}</span>Psychic number (your secondary energy)</h3>
             <p>Drawn from your birth day, this is your instinctive, surface self — how you move through an ordinary day, before you think about it.</p>
+            <p class="subhead">${birthDayNote(Number(profile.dob.split('-')[2]))} Next to your life path, this birth-day number is ${harmonyText(lifePath, psychic).tone}.</p>${Number(profile.dob.split('-')[2]) >= 10 ? compoundHTML(Number(profile.dob.split('-')[2])) : ''}
           </div>
           <div class="cell">
-            <h3><span class="num">${nameNum}</span>Name number</h3>
+            <h3><span class="num">${chainLabel(nameNumRaw, true)}</span>Name number (Chaldean)</h3>
             <p>Drawn from your full birth name, this is the deeper pull underneath — the direction your life tends to lean when you're not steering it consciously.</p>
           </div>
         </div>
+        <p class="care-note">Name numbers depend on the letter system. This one uses the Chaldean table. Maturity, karmic lessons and hidden passion use the Pythagorean table, which can give a different number for the same name (yours reads as ${pythNameNumber(profile.name)} in Pythagorean). Neither is wrong, they are different traditions.</p>
         ${renderKarmicBlock(nameKarmic, 'name number')}
         ${renderCompoundBlock(nameNumRaw)}
         <h3 style="margin-top:22px;">A few small tweaks to your own name</h3>
@@ -2643,6 +2948,14 @@ function renderReading(){
             <button class="ghost" id="altNameBtn" type="button">Check it</button>
           </div>
           <div class="namecheck-result" id="altNameResult"></div>
+        </details>
+        <details class="namecheck">
+          <summary>Word calculator: any word or phrase</summary>
+          <div class="inner">
+            <input type="text" id="wordCalcInput" placeholder="Try a word, like water or home">
+            <button class="ghost" id="wordCalcBtn" type="button">Calculate</button>
+          </div>
+          <div class="namecheck-result" id="wordCalcResult"></div>
         </details>
       </div>
 
@@ -2697,10 +3010,10 @@ function renderReading(){
           <label for="fengShuiFile">A photo of the room</label>
           <input type="file" id="fengShuiFile" accept="image/*">
         </div>
-        <button class="primary" id="fengShuiBtn" type="button" style="margin-top:14px;">Read this room</button>
-        <div id="fengShuiResult" style="display:none; margin-top:18px; white-space:pre-wrap; font-size:14.5px; line-height:1.65; color:var(--moonlight);"></div>
-        <p class="care-note" style="margin-top:16px;">This only works on the claude.ai version of this app, not a copy hosted elsewhere (like Render) — it calls Claude directly, which only a page opened inside claude.ai itself can do. Nothing about the photo is saved; it's read once for this answer.</p>
+        <p class="care-note" style="margin-top:14px;">Want a read on a room? The Feng Shui tab has a photo reading.</p>
       </div>
+
+      ${renderPersonalYearCycleHTML(profile.dob, refDate)}
 
       <div class="panel">
         <h2>Navigating your cycles</h2>
@@ -2724,6 +3037,8 @@ function renderReading(){
         </div>
         <p style="margin-top:14px;"><b style="color:var(--paper);">Today's grounding practice:</b> ${lp.practice}</p>
         ${renderColorGuidanceHTML(lifePath)}
+        ${renderLuckyHTML(profile.dob, refDate)}
+        ${renderHouseLensHTML()}
       </div>
 
       <div class="panel">
@@ -2763,11 +3078,13 @@ function renderReading(){
   document.getElementById('readingRoot').innerHTML = html;
   renderMoons();
   wireAltNameCheck(lifePath);
+  wireWordCalc();
+  wireHouseLens(lifePath);
   wireCueCaseCheck();
   wireWordSearch(lifePath);
   wireCompatCheck(lifePath);
   wireKuaCheck(profile.dob);
-  wireFengShuiTool(lifePath, profile.dob);
+  wireYearMethodToggle();
   wireRisingSignTool(profile.dob);
 }
 
@@ -2788,6 +3105,27 @@ function renderMoons(){
       <p>A natural point to release something. Name one thing connected to your growth edge — ${lp.growth} — that you're ready to loosen your grip on.</p>
     </div>
   `;
+}
+
+function wireWordCalc(){
+  const btn = document.getElementById('wordCalcBtn');
+  const input = document.getElementById('wordCalcInput');
+  const result = document.getElementById('wordCalcResult');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const word = input.value.trim();
+    const letters = foldName(word).toLowerCase().replace(/[^a-z]/g,'');
+    if(!letters) return;
+    const pRaw = letters.split('').reduce((a,c)=>a + (pythagoreanMap[c]||0), 0);
+    const cRaw = letters.split('').reduce((a,c)=>a + (chaldeanMap[c]||0), 0);
+    const fv = letters.split('').find(c=>'aeiou'.includes(c));
+    const fvPos = fv ? fv.charCodeAt(0) - 96 : null;
+    const amber = t => `<b style="color:var(--amber);">${t}</b>`;
+    result.innerHTML = `${amber(escHtml(word))}<br>Pythagorean total: ${amber(chainLabel(pRaw, true))}<br>Chaldean total: ${amber(chainLabel(cRaw, true))}` +
+      (fv ? `<br>First vowel ${amber(fv.toUpperCase())} is letter ${fvPos} of the alphabet: ${amber(chainLabel(fvPos, false))}` : '') +
+      `<br><br><span style="opacity:.75;">Fun to explore, but numbers can be found in almost any word, so treat this as a lens, not proof.</span>`;
+    result.classList.add('show');
+  });
 }
 
 function wireAltNameCheck(lifePath){
@@ -2848,6 +3186,12 @@ function wireWordSearch(lifePathNum){
 /* ---------------------------------------------------------
    RENDER: TODAY
 --------------------------------------------------------- */
+function masterDayLine(day){
+  if(day === 11 || day === 29) return `<p class="care-note" style="margin-top:8px;">Today's date carries master 11 energy (the 11th, or the 29th, which adds to 11): a day for intuition and emotional awareness. Some teachers treat it as separate from a 2 day.</p>`;
+  if(day === 22) return `<p class="care-note" style="margin-top:8px;">The 22nd carries master 22 energy: a good day to make something concrete rather than only plan it.</p>`;
+  return '';
+}
+
 function renderToday(){
   const refDate = new Date();
   const pd = personalDay(profile.dob, refDate);
@@ -2860,6 +3204,8 @@ function renderToday(){
       <div class="date-label">${fmtDate(refDate)}</div>
       <div class="today-num">${pd}</div>
       <p style="margin-top:6px;">Your personal day number, ruled by ${info.planet}</p>
+      ${masterDayLine(refDate.getDate())}
+      <p class="subhead" style="margin-top:6px;">${(function(){const y=personalYearDetail(profile.dob, effectiveYear(profile.dob, refDate)); const pm=personalMonthPeriods(profile.dob, refDate); return 'Personal year '+y.label+' \u00b7 month '+pm.periods[pm.cur].num+' \u00b7 day '+pd;})()}</p>
     </div>
     <div class="panel">
       <ul class="today-list">
@@ -2897,12 +3243,14 @@ async function loadJournal(){
 function renderJournal(){
   const refDate = new Date();
   const pd = personalDay(profile.dob, refDate);
+  const pyD = personalYearDetail(profile.dob, effectiveYear(profile.dob, refDate));
+  const yearAsk = cycleGuide[pyD.reduced].ask;
   const moodChips = moods.map(m=>`<button type="button" class="mood-chip" data-mood="${m}">${m}</button>`).join('');
   const entriesHtml = journalEntries.length
     ? journalEntries.slice().reverse().map(e=>`
         <div class="entry">
-          <div class="row1"><span>${e.date}</span><span>Personal day ${e.pd} · ${e.mood || 'unspecified'}</span></div>
-          <p>${e.note}</p>
+          <div class="row1"><span>${e.date}</span><span>${e.py ? 'Year '+escHtml(e.py)+' · ' : ''}Personal day ${escHtml(e.pd)} · ${escHtml(e.mood || 'unspecified')}</span></div>
+          <p>${escHtml(e.note)}</p>
         </div>`).join('')
     : `<div class="empty-state">Nothing logged yet. Your first entry starts the pattern.</div>`;
 
@@ -2911,10 +3259,11 @@ function renderJournal(){
     <h1 class="headline">Journal</h1>
     <div class="panel">
       <h2>Log how you're feeling</h2>
-      <p>Today is personal day ${pd}. A line or two is enough — this is for noticing patterns over time, not writing an essay.</p>
+      <p>Today is personal day ${pd}, in a personal year ${pyD.label}. A line or two is enough — this is for noticing patterns over time, not writing an essay.</p>
+      <p class="care-note" style="margin-top:8px;"><b>Question for your year:</b> ${yearAsk}</p>
       <div class="journal-form" style="margin-top:18px;">
         <div class="mood-row" id="moodRow">${moodChips}</div>
-        <textarea id="journalNote" placeholder="What's actually going on today?"></textarea>
+        <textarea id="journalNote" placeholder="${yearAsk}"></textarea>
         <button class="primary" id="saveEntryBtn" type="button" style="align-self:flex-start;">Save entry</button>
       </div>
     </div>
@@ -2939,7 +3288,7 @@ function wireJournal(pd){
   document.getElementById('saveEntryBtn').addEventListener('click', async ()=>{
     const note = document.getElementById('journalNote').value.trim();
     if(!note) return;
-    const entry = {date: fmtDate(new Date()), pd, mood: selectedMood, note};
+    const entry = {date: fmtDate(new Date()), pd, py: personalYearDetail(profile.dob, effectiveYear(profile.dob, new Date())).label, mood: selectedMood, note};
     journalEntries.push(entry);
     await storageSet('journal:entries', JSON.stringify(journalEntries));
     renderJournal();
@@ -3272,6 +3621,8 @@ document.getElementById('editInfoBtn').addEventListener('click', async ()=>{
    BOOT
 --------------------------------------------------------- */
 (async function boot(){
+  const ym = await storageGet('settings:yearMethod');
+  if(ym === 'calendar' || ym === 'birthday') yearMethod = ym;
   const raw = await storageGet('profile:data');
   if(raw){
     try{
