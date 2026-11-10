@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Footing — a numerology companion</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#1B2438">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -736,10 +739,12 @@
     <nav class="wayfind" id="wayfind">
       <a data-screen="profile">Your reading</a>
       <a data-screen="today">Today</a>
+      <a data-screen="guide">Guide</a>
+      <a data-screen="calendar">Calendar</a>
+      <a data-screen="compare">Compare</a>
       <a data-screen="moon">Moon</a>
       <a data-screen="journal">Journal</a>
       <a data-screen="fengshui">Feng Shui</a>
-      <a data-screen="guide">Guide</a>
     </nav>
   </div>
 </header>
@@ -789,6 +794,14 @@
   </section>
 
   <!-- GUIDE SCREEN -->
+  <section class="screen" id="screen-calendar">
+    <div id="calendarRoot"></div>
+  </section>
+
+  <section class="screen" id="screen-compare">
+    <div id="compareRoot"></div>
+  </section>
+
   <section class="screen" id="screen-guide">
     <div id="guideRoot"></div>
   </section>
@@ -1925,6 +1938,164 @@ function renderFengShuiScreen(){
 const GUIDE_KEY = 'guide:messages';
 function loadGuide(){ try{ return JSON.parse(window.localStorage.getItem(GUIDE_KEY)||'[]'); }catch(e){ return []; } }
 function saveGuide(m){ try{ window.localStorage.setItem(GUIDE_KEY, JSON.stringify(m)); }catch(e){} }
+/* ---------- Energy calendar + date checker ---------- */
+const DAY_THEME = {1:'Start',2:'Cooperate',3:'Express',4:'Build',5:'Change',6:'Care',7:'Reflect',8:'Money & power',9:'Finish'};
+const DAY_HUE = {1:40,2:200,3:55,4:150,5:20,6:330,7:260,8:100,9:0};
+const ACTIVITIES = {
+  start:{label:'Start something new', good:[1,3,5,8], hard:[4,7,9]},
+  commit:{label:'Sign or commit', good:[2,4,6,8], hard:[5,7,9]},
+  money:{label:'Money or business', good:[1,4,8], hard:[5,7,9]},
+  talk:{label:'Important conversation', good:[2,3,6,9], hard:[1,5,8]},
+  travel:{label:'Travel', good:[1,3,5], hard:[2,4]},
+  rest:{label:'Rest and reflect', good:[2,6,7,9], hard:[1,5,8]}
+};
+let calYear = null, calMonth = null;
+function renderCalendarScreen(){
+  const root = document.getElementById('calendarRoot');
+  if(!profile){ root.innerHTML=''; return; }
+  const now = new Date();
+  if(calYear===null){ calYear = now.getFullYear(); calMonth = now.getMonth(); }
+  const dob = profile.dob, me = personDetails(dob, now), enemy = clashMap[me.animal];
+  const first = new Date(calYear, calMonth, 1), days = new Date(calYear, calMonth+1, 0).getDate();
+  const monthName = first.toLocaleString('en',{month:'long',year:'numeric'});
+  let cells = ''.padStart(0);
+  for(let i=0;i<first.getDay();i++) cells += '<div></div>';
+  for(let d=1; d<=days; d++){
+    const dt = new Date(calYear, calMonth, d, 12), n = personalDay(dob, dt);
+    const today = dt.toDateString()===now.toDateString();
+    cells += `<button type="button" class="cal-day" data-d="${d}" style="background:hsl(${DAY_HUE[n]} 45% 28%);color:#fff;border:${today?'2px solid #fff':'1px solid rgba(255,255,255,.15)'};border-radius:8px;padding:6px 2px;cursor:pointer;font:inherit;"><div style="font-size:12px;opacity:.8">${d}</div><div style="font-size:18px;font-weight:600">${n}</div></button>`;
+  }
+  root.innerHTML = `
+    <div class="guide-wrap">
+      <div class="guide-head"><div><p class="hero-line" style="margin:0;">Calendar</p>
+      <p class="subhead" style="margin:4px 0 0;">Your personal day number for every day. Tap a day.</p></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;">
+        <button type="button" class="guide-clear" id="calPrev">&larr;</button><strong>${monthName}</strong><button type="button" class="guide-clear" id="calNext">&rarr;</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:12px;opacity:.7;margin-bottom:4px;">${['Su','Mo','Tu','We','Th','Fr','Sa'].map(x=>`<div>${x}</div>`).join('')}</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">${cells}</div>
+      <div class="card" id="calDetail" style="padding:14px;margin:12px 0;">Tap a day to see its theme.</div>
+      <div class="card" style="padding:16px;margin:12px 0;">
+        <p><strong>Is this a good day for&hellip;</strong></p>
+        <form class="guide-bar" id="dcForm" style="flex-wrap:wrap;">
+          <select id="dcAct" style="flex:1 1 180px;">${Object.entries(ACTIVITIES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select>
+          <input type="date" id="dcDate" required style="flex:1 1 160px;">
+          <button class="primary" type="submit">Check</button>
+        </form>
+        <div id="dcOut"></div>
+      </div>
+      <p class="care-note">Day numbers are a reflection tool. Colors only show the number, not good or bad.</p>
+    </div>`;
+  document.getElementById('calPrev').onclick = ()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendarScreen(); };
+  document.getElementById('calNext').onclick = ()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendarScreen(); };
+  root.querySelectorAll('.cal-day').forEach(b=>b.addEventListener('click',()=>{
+    const dt = new Date(calYear, calMonth, Number(b.dataset.d), 12), n = personalDay(dob, dt);
+    document.getElementById('calDetail').innerHTML = `<strong>${dt.toDateString()}</strong><br>Personal day ${n}: ${DAY_THEME[n]}. Good for: ${ACTIVITIES_FOR(n)}.`;
+  }));
+  document.getElementById('dcForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const v = document.getElementById('dcDate').value; if(!v) return;
+    const [y,m,d] = v.split('-').map(Number), dt = new Date(y,m-1,d,12), n = personalDay(dob, dt);
+    const a = ACTIVITIES[document.getElementById('dcAct').value];
+    const verdict = a.good.includes(n) ? ['Supportive','This day\'s number tends to back this kind of plan.'] : a.hard.includes(n) ? ['Go gently','This day\'s number runs against this kind of plan. Allow extra time, or consider a nearby day.'] : ['Mixed','Neither strongly for nor against. Your own preparation matters more.'];
+    const yrAnimal = animalForYear(chineseYearFor(y,m,d));
+    const enemyNote = yrAnimal===enemy ? `<p>That date falls in a ${animalLabel(enemy)} year, your enemy sign, so keep plans conservative.</p>` : '';
+    document.getElementById('dcOut').innerHTML = `<p style="margin-top:10px;"><strong>${verdict[0]}.</strong> Personal day ${n} (${DAY_THEME[n]}). ${verdict[1]}</p>${enemyNote}`;
+  });
+}
+function ACTIVITIES_FOR(n){ const r = Object.values(ACTIVITIES).filter(a=>a.good.includes(n)).map(a=>a.label.toLowerCase()); return r.length ? r.join(', ') : 'steady everyday tasks'; }
+
+/* ---------- Compare: enemy signs/years + two-person check ---------- */
+function animalForYear(cy){ return zodiacAnimals[((cy-4)%12+12)%12]; }
+function animalLabel(a){ return a==='Rabbit' ? 'Rabbit (Cat)' : a; }
+function yearsOfAnimal(animal, from, count){
+  const out=[]; for(let y=from; out.length<count; y++){ if(animalForYear(y)===animal) out.push(y); } return out;
+}
+function signRelation(a, b){
+  if(a===b) return {tag:'Same sign', note:'You mirror each other. Easy to understand, and you share the same strengths and blind spots.'};
+  if((a==='Rat'&&b==='Ox')||(a==='Ox'&&b==='Rat')) return {tag:'Soulmate pair', note:'Rat and Ox are the classic best match in Chinese astrology.'};
+  if(clashMap[a]===b) return {tag:'Enemy signs', note:'Opposite signs that clash. Expect friction, so give each other space and patience.'};
+  if(trineMatesFor(a).includes(b)) return {tag:'Friend signs (trine)', note:'Same trine group. You tend to understand each other and work well together.'};
+  return {tag:'Neutral', note:'Neither clash nor trine. How it goes depends more on the numbers and the people.'};
+}
+function personDetails(dob, refDate){
+  const cy = chineseYearForStr(dob); const animal = animalForYear(cy);
+  return {dob, animal, lp: lifePathFromDOB(dob), py: personalYear(dob, refDate)};
+}
+function renderCompareScreen(){
+  const root = document.getElementById('compareRoot');
+  if(!profile){ root.innerHTML=''; return; }
+  const now = new Date(), thisYear = now.getFullYear();
+  const me = personDetails(profile.dob, now);
+  const enemy = clashMap[me.animal];
+  const enemyYrs = yearsOfAnimal(enemy, thisYear, 3).join(', ');
+  const ownYrs = yearsOfAnimal(me.animal, thisYear, 2).join(', ');
+  const friends = trineMatesFor(me.animal).map(animalLabel).join(' and ');
+  const curAnimal = animalForYear(thisYear);
+  const yearNote = curAnimal===enemy ? `${thisYear} is your enemy sign's year, so go carefully and play conservatively.`
+    : curAnimal===me.animal ? `${thisYear} is your own sign's year, so things tend to go your way.`
+    : trineMatesFor(me.animal).includes(curAnimal) ? `${thisYear} is a friend sign's year, so it tends to run smoothly.`
+    : `${thisYear} is a neutral year for your sign.`;
+  root.innerHTML = `
+    <div class="guide-wrap">
+      <div class="guide-head"><div><p class="hero-line" style="margin:0;">Compare</p>
+      <p class="subhead" style="margin:4px 0 0;">Enemy signs, enemy years, and how two people line up.</p></div></div>
+      <div class="card" style="padding:16px;margin:12px 0;">
+        <p><strong>Your sign:</strong> ${escapeHTMLSafe(animalLabel(me.animal))}</p>
+        <p><strong>Enemy sign:</strong> ${escapeHTMLSafe(animalLabel(enemy))} &middot; next enemy years: ${enemyYrs}</p>
+        <p><strong>Friend signs:</strong> ${escapeHTMLSafe(friends)}</p>
+        <p><strong>Your own years:</strong> ${ownYrs}</p>
+        <p>${escapeHTMLSafe(yearNote)}</p>
+      </div>
+      <form class="guide-bar" id="cmpForm" style="flex-wrap:wrap;">
+        <input type="text" id="cmpName" placeholder="Their name (optional)" style="flex:1 1 160px;">
+        <input type="date" id="cmpDob" required style="flex:1 1 160px;">
+        <button class="primary" type="submit">Compare</button>
+      </form>
+      <div id="cmpOut"></div>
+      <p class="care-note" style="margin:8px 0 0;">Nothing here is saved. Compatibility is a reflection tool, not a verdict on any relationship.</p>
+    </div>`;
+  document.getElementById('cmpForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const v = document.getElementById('cmpDob').value; if(!v) return;
+    const name = document.getElementById('cmpName').value.trim() || 'Them';
+    const them = personDetails(v, now), rel = signRelation(me.animal, them.animal);
+    const lpNote = me.lp===them.lp ? 'Same Life Path, so you see life the same way.' : 'Different Life Paths, so you bring different strengths.';
+    const pyNote = me.py===them.py ? 'You are in the same personal year, so you are in sync right now.' : 'Different personal years, so you are in different seasons right now.';
+    document.getElementById('cmpOut').innerHTML = `
+      <div class="card" style="padding:16px;margin-top:12px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><th></th><th>You</th><th>${escapeHTMLSafe(name)}</th></tr>
+          <tr><td>Sign</td><td>${escapeHTMLSafe(animalLabel(me.animal))}</td><td>${escapeHTMLSafe(animalLabel(them.animal))}</td></tr>
+          <tr><td>Life Path</td><td>${me.lp}</td><td>${them.lp}</td></tr>
+          <tr><td>Personal Year ${thisYear}</td><td>${me.py}</td><td>${them.py}</td></tr>
+        </table>
+        <p style="margin-top:12px;"><strong>${rel.tag}.</strong> ${rel.note}</p>
+        <p>${lpNote} ${pyNote}</p>
+        <button type="button" class="primary" id="cmpAsk">Ask the Guide about this match</button>
+      </div>`;
+    document.getElementById('cmpAsk').addEventListener('click', ()=>{
+      window.pendingGuidePrompt = `Compare me with ${name} (born ${v}). I am ${animalLabel(me.animal)}, Life Path ${me.lp}, Personal Year ${me.py}. ${name} is ${animalLabel(them.animal)}, Life Path ${them.lp}, Personal Year ${them.py}. The signs are: ${rel.tag}. What does this mean for how we get along, and what is one small step I can take?`;
+      showScreen('guide');
+    });
+  });
+}
+
+function guidePersonalTimeText(dob){
+  const now = new Date();
+  const yr = effectiveYear(dob, now);
+  const d = personalYearDetail(dob, yr);
+  const pm = personalMonthPeriods(dob, now);
+  const cur = pm.periods[pm.cur];
+  const stage = computeCycles(dob, lifePathFromDOB(dob), now).find(x=>x.current);
+  const method = yearMethod === 'birthday' ? 'year turns over on the birthday' : 'year starts January 1';
+  return [
+    `Today's date: ${now.toISOString().slice(0,10)}`,
+    `Personal year ${yr} (${method}): ${d.label} (${d.sum})${d.karmic ? ', karmic debt '+d.karmic : ''}`,
+    `Current personal month: ${cur.num} (began ${fmtLongDate(cur.start)})`,
+    stage ? `Current pinnacle: ${chainLabel(stage.pinRaw, true)} (ages ${stage.range}), challenge ${stage.chal}` : ''
+  ].filter(Boolean).join('\n');
+}
 function guideProfileText(){
   const dob = profile.dob; const by = Number(dob.split('-')[0]);
   const c = computeAll(profile.name, dob, new Date());
@@ -1938,7 +2109,7 @@ function guideProfileText(){
     `Name: ${profile.name}`, `Date of birth: ${dob}`,
     `Life path: ${c.lifePath}${lp.strength?` (strength: ${lp.strength}; growth: ${lp.growth||''})`:''}`,
     `Name / expression number: ${c.nameNum}`, `Psychic (birth day) number: ${c.psychic}`,
-    `Personal year (${new Date().getFullYear()}): ${c.py}`,
+    guidePersonalTimeText(dob),
     `Lo Shu grid present: ${present.join(', ')||'none'}; missing: ${missing.join(', ')||'none'}`,
     `Chinese zodiac: ${elementForYear(chineseYearForStr(dob))} ${zodiacForYear(chineseYearForStr(dob))}`,
     `Kua number: ${kua}`,
@@ -1950,7 +2121,7 @@ let guideBusy = false;
 function renderGuideScreen(){
   const root = document.getElementById('guideRoot');
   if(!profile){ root.innerHTML = ''; return; }
-  const chips = ['What career paths fit my life path?','What does this personal year mean for me?','Explain my Lo Shu grid balance','What are my best colors and directions?','How do my birth element and Kua relate?','What should I focus on this month?'];
+  const chips = ['What career paths fit my life path?','What does this personal year mean for me?','Explain my Lo Shu grid balance','What are my best colors and directions?','How do my birth element and Kua relate?','What should I focus on this month?','Give me one small step for this week'];
   root.innerHTML = `
     <div class="guide-wrap">
       <div class="guide-head">
@@ -1964,7 +2135,7 @@ function renderGuideScreen(){
         <textarea id="guideInput" rows="1" placeholder="Ask the Guide…"></textarea>
         <button class="primary" type="submit" id="guideSend">Send</button>
       </form>
-      <p class="care-note" style="margin:8px 0 0;">Your conversation is saved only on this device.</p>
+      <p class="care-note" style="margin:8px 0 0;">Your conversation is saved only on this device. The Guide is for reflection, not prediction, and it is not medical, legal or financial advice.</p>
     </div>`;
   const log = document.getElementById('guideLog');
   const input = document.getElementById('guideInput');
@@ -1981,6 +2152,7 @@ function renderGuideScreen(){
   input.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(input.value); } });
   document.getElementById('guideForm').addEventListener('submit', e=>{ e.preventDefault(); send(input.value); });
   root.querySelectorAll('.guide-chip').forEach(b=>b.addEventListener('click', ()=>send(b.textContent)));
+  if(window.pendingGuidePrompt){ const q = window.pendingGuidePrompt; window.pendingGuidePrompt = null; send(q); }
   document.getElementById('guideClear').addEventListener('click', ()=>{ if(guideBusy) return; msgs=[]; saveGuide(msgs); draw(); input.focus(); });
   async function send(text){
     text = String(text||'').trim(); if(!text || guideBusy) return;
@@ -3600,6 +3772,8 @@ function showScreen(name){
   if(name === 'moon') renderMoonPractice();
   if(name === 'fengshui') renderFengShuiScreen();
   if(name === 'guide') renderGuideScreen();
+  if(name === 'compare') renderCompareScreen();
+  if(name === 'calendar') renderCalendarScreen();
   if(name === 'journal'){ loadJournal().then(renderJournal); }
   window.scrollTo({top:0, behavior:'smooth'});
 }

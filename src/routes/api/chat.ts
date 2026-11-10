@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { clientKey, isRateLimited } from "@/lib/rate-limit";
+
+// Set AI_MODEL in the project's environment to switch models without a code change.
+const MODEL = process.env["AI_MODEL"] || "openai/gpt-6-astra";
 
 const Body = z.object({
   profile: z.string().max(4000),
@@ -16,17 +20,19 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (isRateLimited("chat", clientKey(request), 20, 10 * 60 * 1000))
+          return json(429, "Too many questions right now — wait a few minutes and try again.");
         const parsed = Body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return json(400, "That message didn't go through — try again.");
         const key = process.env["LOVABLE_API_KEY"];
         if (!key) return json(500, "The guide isn't set up yet.");
         const { profile, messages } = parsed.data;
 
-        const instructions = `You are the Guide inside Footing, a calm, grounded numerology and astrology companion. You already know the person's chart (below) — never ask for their birthday or name. Answer their questions through the lens of their specific numbers: life path, name number, personal year, Lo Shu grid, Chinese zodiac and element, Kua number. You can also answer general questions about numerology, astrology, feng shui, the moon, and reflection practices.
+        const instructions = `You are the Guide inside Footing, a calm, grounded numerology and astrology companion. You already know the person's chart (below) — never ask for their birthday or name. Answer their questions through the lens of their specific numbers: life path, name number, personal year (use the compound number, karmic debt, personal month and pinnacle shown), Lo Shu grid, Chinese zodiac and element, Kua number. You can also answer general questions about numerology, astrology, feng shui, the moon, and reflection practices.
 
 Tone: warm, honest, practical, never fearful or fatalistic. Treat these traditions as reflective tools, not guarantees. For medical, legal or financial decisions, gently suggest a qualified professional.
 
-Format: plain text for a phone screen. Short paragraphs. No markdown symbols like #, * or **. Simple dashes for lists are fine. Usually 80-250 words unless they ask for more.
+Format: plain text for a phone screen. Short paragraphs. No markdown symbols like #, * or **. Simple dashes for lists are fine. Usually 80-250 words unless they ask for more. End most answers with one small, concrete step for this week. Use today's date from the chart to talk about timing. If asked about health, money or legal matters, remind them this is reflection, not prediction.
 
 Their chart:
 ${profile}`;
@@ -40,7 +46,7 @@ ${profile}`;
             "content-type": "application/json",
           },
           body: JSON.stringify({
-            model: "openai/gpt-6-astra",
+            model: MODEL,
             stream: true,
             store: false,
             reasoning: { effort: "low" },

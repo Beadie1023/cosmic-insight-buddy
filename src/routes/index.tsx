@@ -2,7 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   head: () => ({
+    links: [
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+    ],
+    scripts: [
+      {
+        children:
+          "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
+      },
+    ],
     meta: [
+      { name: "theme-color", content: "#1B2438" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Footing" },
       { title: "Footing — a numerology companion" },
       {
         name: "description",
