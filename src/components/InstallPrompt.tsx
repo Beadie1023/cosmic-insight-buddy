@@ -112,7 +112,7 @@ export function InstallPrompt() {
       {showSteps && (
         <div
           role="dialog"
-          aria-label="How to install Footing"
+          aria-label="How to install Skywise"
           style={{
             maxWidth: 280,
             background: NIGHT_2,
@@ -125,7 +125,7 @@ export function InstallPrompt() {
             boxShadow: "0 8px 30px rgba(0,0,0,.45)",
           }}
         >
-          <strong style={{ color: AMBER }}>Add Footing to your Home Screen</strong>
+          <strong style={{ color: AMBER }}>Add Skywise to your Home Screen</strong>
           <ol style={{ margin: "8px 0 0", paddingLeft: 18 }}>
             <li>Tap the Share button in Safari (the square with an arrow).</li>
             <li>Scroll down and tap “Add to Home Screen”.</li>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Footing — a numerology companion</title>
+<title>Skywise — a numerology companion</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#1B2438">
@@ -777,7 +777,7 @@
 
 <header class="top" id="topNav" style="display:none;">
   <div class="top-inner">
-    <div class="brand">Footing</div>
+    <div class="brand">Skywise</div>
     <nav class="wayfind" id="wayfind">
       <a data-screen="home">Home</a>
       <a data-screen="profile">Your reading</a>
@@ -800,7 +800,7 @@
   <!-- INPUT SCREEN -->
   <section class="screen active" id="screen-input">
     <p class="hero-line">A quiet place to get your bearings</p>
-    <h1 class="headline">Let's find your footing.</h1>
+    <h1 class="headline">Let's find your bearings.</h1>
     <p class="lede">Give me your full birth name and your birth date. That's all this needs — no forms to fill out, no history to explain. I'll turn it into something you can actually use today.</p>
 
     <form class="intake" id="intakeForm">
@@ -3940,24 +3940,24 @@ function drawShareCanvas(){
   for(let i=0;i<90;i++){ g.globalAlpha = .2 + (i*37%10)/14; g.fillRect((i*211)%W, (i*127)%(H*.7), 3, 3); }
   g.globalAlpha = 1;
   g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 3; g.strokeRect(70,120,W-140,1000);
-  g.textAlign = 'center'; g.fillStyle = '#f0a62b'; g.font = '600 44px sans-serif'; g.fillText('FOOTING', W/2, 210);
+  g.textAlign = 'center'; g.fillStyle = '#f0a62b'; g.font = '600 44px sans-serif'; g.fillText('SKYWISE', W/2, 210);
   g.fillStyle = '#fff'; g.font = '600 82px sans-serif';
   let nm = d.name; while(g.measureText(nm).width > W-220 && nm.length>4){ nm = nm.slice(0,-1); }
   g.fillText(nm, W/2, 380);
   const cols = [[String(d.lp),'Life Path'],[d.animal,'Chinese sign'],[d.sign,'Sun sign']];
   cols.forEach((c,i)=>{ const x = 210 + i*330; g.fillStyle = '#fff'; g.font = (c[0].length>3?'600 56px':'600 140px')+' sans-serif'; g.fillText(c[0], x, 640); g.fillStyle = '#b9b6e0'; g.font = '34px sans-serif'; g.fillText(c[1], x, 710); });
   g.fillStyle = '#b9b6e0'; g.font = '40px sans-serif'; g.fillText('Personal year ' + d.py, W/2, 900);
-  g.fillStyle = '#f0a62b'; g.font = '36px sans-serif'; g.fillText('Find your footing', W/2, 1230);
+  g.fillStyle = '#f0a62b'; g.font = '36px sans-serif'; g.fillText('Skywise', W/2, 1230);
   return cv;
 }
 async function shareMyCard(){
   const cv = drawShareCanvas();
   const blob = await new Promise(r=>cv.toBlob(r,'image/png'));
-  const file = new File([blob], 'my-footing-card.png', {type:'image/png'});
+  const file = new File([blob], 'my-skywise-card.png', {type:'image/png'});
   try{
-    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'My Footing card'}); return; }
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'My Skywise card'}); return; }
   }catch(e){ if(e && e.name === 'AbortError') return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-footing-card.png';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-skywise-card.png';
   document.body.appendChild(a); a.click(); a.remove();
 }
 

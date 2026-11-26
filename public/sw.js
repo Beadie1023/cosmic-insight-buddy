@@ -1,7 +1,7 @@
-// Footing service worker: keeps the app shell available offline.
+// Skywise service worker: keeps the app shell available offline.
 // Network first, so updates show up right away; the cache is only a fallback.
 // API calls (Guide, Feng Shui) are never cached.
-const CACHE = "footing-v3";
+const CACHE = "skywise-v2";
 const SHELL = ["/", "/footing.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
