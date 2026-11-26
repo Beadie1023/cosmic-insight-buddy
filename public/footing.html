@@ -729,6 +729,48 @@
 .guide-bar{display:flex;gap:8px;align-items:flex-end;}
 .guide-bar textarea{flex:1;resize:none;font:inherit;font-size:16px;line-height:1.4;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:var(--paper);max-height:140px;}
 .guide-bar .primary{margin:0;}
+.tabs3{display:flex;gap:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px;margin:0 0 16px;}
+.tabs3 button{flex:1;background:none;border:0;color:var(--moonlight);font:inherit;font-size:14px;padding:8px 10px;border-radius:999px;cursor:pointer;}
+.tabs3 button.on{background:rgba(255,255,255,.14);color:var(--amber);font-weight:600;}
+.ring-wrap{position:relative;width:200px;height:200px;margin:8px auto 4px;}
+.ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.ring-mid .big{font-size:56px;line-height:1;color:var(--amber);font-weight:600;}
+.ring-mid small{color:var(--moonlight);font-size:13px;margin-top:4px;}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+.pair .cell2{border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 8px;text-align:center;background:rgba(255,255,255,.04);}
+.pair .cell2 b{display:block;font-size:16px;color:var(--paper);}
+.tag-friendly{color:#5fd38a;font-size:13px;font-weight:600;}
+.tag-neutral{color:var(--moonlight);font-size:13px;font-weight:600;}
+.tag-hard{color:#ff9a6b;font-size:13px;font-weight:600;}
+.navrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 18px;}
+.tools-grid button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:var(--paper);border-radius:16px;padding:12px 4px 10px;font:inherit;font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.tools-grid button span{font-size:24px;line-height:1;}
+.banner{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 14px;color:var(--paper);font:inherit;cursor:pointer;}
+.banner .bn{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.1);color:var(--amber);font-size:26px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.idcard{border:1px solid rgba(255,255,255,.16);border-radius:20px;padding:18px;background:rgba(255,255,255,.04);margin:14px 0;}
+.idrow{display:flex;justify-content:space-around;text-align:center;margin:14px 0 6px;}
+.idrow div{flex:1;}
+.idrow .v{font-size:34px;color:var(--paper);line-height:1.1;}
+.idrow small{display:block;color:var(--moonlight);font-size:13px;margin-top:4px;}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mtile{border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px;background:rgba(255,255,255,.04);}
+.mtile.cur{border-color:var(--amber);}
+.mtile .mn{font-size:28px;color:var(--amber);font-weight:600;line-height:1;}
+.mtile small{display:block;color:var(--moonlight);font-size:12.5px;margin-top:4px;}
+.dtabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;}
+.dtabs button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--moonlight);font:inherit;font-size:18px;padding:6px 10px;cursor:pointer;}
+.dtabs button.on{color:var(--paper);border-bottom-color:var(--amber);}
+.dword{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.1);color:var(--paper);font:inherit;font-size:17px;padding:12px 2px;cursor:pointer;display:flex;justify-content:space-between;}
+.dline{display:flex;gap:8px;margin:8px 0;}
+.dline input{flex:1;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:var(--paper);}
+.xcard{border:1px solid rgba(255,255,255,.16);border-radius:20px;padding:20px;background:rgba(255,255,255,.04);margin:10px 0;text-align:center;}
+.xcard h2{margin:0 0 2px;}
+.xtrio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
+.xtrio div{border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 4px;}
+.xtrio .v{font-size:26px;color:var(--amber);font-weight:600;line-height:1.1;}
+.xtrio small{display:block;color:var(--moonlight);font-size:12px;}
 </style>
 </head>
 <body>
@@ -737,7 +779,11 @@
   <div class="top-inner">
     <div class="brand">Footing</div>
     <nav class="wayfind" id="wayfind">
+      <a data-screen="home">Home</a>
       <a data-screen="profile">Your reading</a>
+      <a data-screen="energy">Monthly</a>
+      <a data-screen="dictionary">Letterology</a>
+      <a data-screen="explore">Explore</a>
       <a data-screen="today">Today</a>
       <a data-screen="guide">Guide</a>
       <a data-screen="calendar">Calendar</a>
@@ -805,6 +851,11 @@
   <section class="screen" id="screen-guide">
     <div id="guideRoot"></div>
   </section>
+
+  <section class="screen" id="screen-home"><div id="homeRoot"></div></section>
+  <section class="screen" id="screen-energy"><div id="energyRoot"></div></section>
+  <section class="screen" id="screen-dictionary"><div id="dictRoot"></div></section>
+  <section class="screen" id="screen-explore"><div id="exploreRoot"></div></section>
 
   <!-- JOURNAL SCREEN -->
   <section class="screen" id="screen-journal">
@@ -2121,7 +2172,7 @@ let guideBusy = false;
 function renderGuideScreen(){
   const root = document.getElementById('guideRoot');
   if(!profile){ root.innerHTML = ''; return; }
-  const chips = ['What career paths fit my life path?','What does this personal year mean for me?','Explain my Lo Shu grid balance','What are my best colors and directions?','How do my birth element and Kua relate?','What should I focus on this month?','Give me one small step for this week'];
+  const chips = ['What career paths fit my life path?','What does this personal year mean for me?','Explain my Lo Shu grid balance','What are my best colors and directions?','How do my birth element and Kua relate?','What should I focus on this month?','Give me one small step for this week','How do I use my lucky numbers?','Which are my luckiest days this month?','Is this a good month to start a business?'];
   root.innerHTML = `
     <div class="guide-wrap">
       <div class="guide-head">
@@ -3761,12 +3812,325 @@ function wireMoonPractice(ctx){
 /* ---------------------------------------------------------
    NAVIGATION
 --------------------------------------------------------- */
+/* =========================================================
+   ADDITIONS: Home, Monthly/Yearly energy, share card,
+   letterology dictionary, brand & date explorer
+========================================================= */
+function goScreen(name){ showScreen(name); }
+function firstNameOf(n){ return String(n||'').trim().split(/\s+/)[0] || ''; }
+
+function universalDayOf(d){
+  const raw = (''+d.getDate()+(d.getMonth()+1)+d.getFullYear()).split('').reduce((a,b)=>a+Number(b),0);
+  return {raw, n: reduceNum(raw, false)};
+}
+function chineseMonthAnimal(date){
+  const lon = sunLongitudeAtMs(date.getTime());
+  const idx = (2 + Math.floor((((lon - 315) % 360) + 360) % 360 / 30)) % 12;
+  return zodiacAnimals[idx];
+}
+const SIGN_ELEMENT = {Aries:'F',Leo:'F',Sagittarius:'F',Taurus:'E',Virgo:'E',Capricorn:'E',Gemini:'A',Libra:'A',Aquarius:'A',Cancer:'W',Scorpio:'W',Pisces:'W'};
+function seasonRelation(mine, season){
+  if(mine === season) return 'Friendly';
+  const a = SIGN_ELEMENT[mine], b = SIGN_ELEMENT[season];
+  if(a === b || (a+b === 'FA') || (a+b === 'AF') || (a+b === 'EW') || (a+b === 'WE')) return 'Friendly';
+  if(Math.abs(ZODIAC_ORDER.indexOf(mine) - ZODIAC_ORDER.indexOf(season)) === 6) return 'Challenging';
+  return 'Neutral';
+}
+function animalRelation(mine, other){
+  if(mine === other) return 'Friendly';
+  const t = signRelation(mine, other).tag;
+  if(t === 'Enemy signs') return 'Challenging';
+  if(t.indexOf('Friend') === 0 || t === 'Soulmate pair') return 'Friendly';
+  return 'Neutral';
+}
+function relTag(r){ const c = r==='Friendly' ? 'tag-friendly' : r==='Challenging' ? 'tag-hard' : 'tag-neutral'; return `<span class="${c}">${r}</span>`; }
+
+const MONTH_THEME = {
+  1:['Fresh start','A good month to begin something, make a decision, and take the first step on your own.'],
+  2:['Patience and partnership','Slow down, listen, and let cooperation do what pushing cannot.'],
+  3:['Expression','Speak up, create, and spend time with people. Share what you have been keeping to yourself.'],
+  4:['Foundations','Routines, paperwork and steady work pay off. Build something that lasts.'],
+  5:['Change','Expect movement and surprises. Stay flexible and try something different.'],
+  6:['Home and care','Family, home and responsibilities come forward. Give care, and let yourself receive it too.'],
+  7:['Reflection','A quieter month for study, rest and thinking. Do not force big moves.'],
+  8:['Money','Money, work and results take center stage. Look closely at what you earn, spend and are worth.'],
+  9:['Completion','Finish, clear out and let go. Wrap up what is still open before the next cycle starts.']
+};
+
+let energyTab = 'monthly', energyIdx = null;
+function energyTabsHTML(active){
+  return `<div class="tabs3" id="energyTabs">${[['today','Today'],['monthly','Monthly'],['yearly','Yearly']].map(t=>`<button type="button" data-t="${t[0]}" class="${t[0]===active?'on':''}">${t[1]}</button>`).join('')}</div>`;
+}
+function renderEnergy(){
+  const root = document.getElementById('energyRoot');
+  if(!profile){ root.innerHTML=''; return; }
+  const now = new Date(), dob = profile.dob;
+  const pm = personalMonthPeriods(dob, now);
+  if(energyIdx === null) energyIdx = pm.cur;
+  let body = '';
+  if(energyTab === 'yearly'){
+    const tiles = pm.periods.map((p,i)=>{
+      const end = i < 11 ? pm.periods[i+1].start : personalMonthNext(dob, now).start;
+      const th = MONTH_THEME[p.num];
+      return `<div class="mtile ${i===pm.cur?'cur':''}"><div class="mn">${p.num}</div><b style="font-size:14px;">${th[0]}</b><small>${fmtShort(p.start)} – ${fmtShort(new Date(end.getTime()-86400000))}</small></div>`;
+    }).join('');
+    const py = personalYearDetail(dob, pm.year);
+    body = `<h2 style="margin:6px 0;">Your Energy Roadmap</h2>
+      <p class="subhead">Personal year ${py.label}. Each tile is one personal month, starting from ${yearMethod==='birthday'?'your birthday':'January 1'}.</p>
+      <div class="mgrid">${tiles}</div>`;
+  } else {
+    const p = pm.periods[energyIdx];
+    const end = energyIdx < 11 ? pm.periods[energyIdx+1].start : personalMonthNext(dob, now).start;
+    const total = end - p.start, done = Math.min(Math.max(now - p.start, 0), total);
+    const pct = now < p.start ? 0 : now >= end ? 100 : Math.round(done/total*100);
+    const status = now < p.start ? 'Coming up' : now >= end ? 'Finished' : pct + '% through';
+    const mid = new Date(p.start.getTime() + total/2);
+    const parts = dob.split('-').map(Number);
+    const mySign = sunSignForDateAstro(parts[0], parts[1], parts[2]).sign;
+    const myAnimal = personDetails(dob, now).animal;
+    const season = sunSignAtMs(mid.getTime()), mAnimal = chineseMonthAnimal(mid);
+    const th = MONTH_THEME[p.num], C = 2*Math.PI*54;
+    body = `
+      <div class="navrow"><button type="button" class="guide-clear" id="enPrev" ${energyIdx===0?'disabled style="opacity:.3"':''}>&larr;</button>
+        <div style="text-align:center;"><h2 style="margin:0;">Monthly Energy</h2><div class="subhead" style="margin:2px 0 0;">${fmtLongDate(p.start)} – ${fmtLongDate(new Date(end.getTime()-86400000))}</div></div>
+        <button type="button" class="guide-clear" id="enNext" ${energyIdx===11?'disabled style="opacity:.3"':''}>&rarr;</button></div>
+      <div class="ring-wrap"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/><circle cx="60" cy="60" r="54" fill="none" stroke="#f0a62b" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/></svg>
+        <div class="ring-mid"><div class="big">${p.num}</div><b>Personal Month</b><small>${status}</small></div></div>
+      <div style="text-align:center;margin:8px 0 14px;"><h2 style="margin:0;">${th[0]}</h2><p style="margin:6px 0 0;">${th[1]}</p></div>
+      <div class="pair">
+        <div class="cell2"><small style="color:var(--moonlight)">Season</small><b>${season} Season</b>${relTag(seasonRelation(mySign, season))}</div>
+        <div class="cell2"><small style="color:var(--moonlight)">Chinese month</small><b>${animalLabel(mAnimal)} Month</b>${relTag(animalRelation(myAnimal, mAnimal))}</div>
+      </div>
+      <p class="care-note">Friendly, Neutral and Challenging compare the season with your ${mySign} sun sign (same or compatible element is friendly, the opposite sign is challenging) and the Chinese month with your ${animalLabel(myAnimal)} sign (trine friends are friendly, the clashing sign is challenging). A reflection tool, not a forecast.</p>
+      <button type="button" class="primary" id="enRead">Get monthly reading</button>`;
+  }
+  root.innerHTML = energyTabsHTML(energyTab) + body;
+  root.querySelectorAll('#energyTabs button').forEach(b=>b.onclick = ()=>{
+    if(b.dataset.t === 'today'){ goScreen('today'); return; }
+    energyTab = b.dataset.t; renderEnergy();
+  });
+  const pv = document.getElementById('enPrev'), nx = document.getElementById('enNext'), rd = document.getElementById('enRead');
+  if(pv) pv.onclick = ()=>{ if(energyIdx>0){ energyIdx--; renderEnergy(); } };
+  if(nx) nx.onclick = ()=>{ if(energyIdx<11){ energyIdx++; renderEnergy(); } };
+  if(rd) rd.onclick = ()=>{
+    const p = pm.periods[energyIdx];
+    window.pendingGuidePrompt = `Give me a reading for my personal month ${p.num} starting ${fmtLongDate(p.start)}. What should I focus on, what should I be careful with, and what is one small step?`;
+    goScreen('guide');
+  };
+}
+
+/* ---------- Share card ---------- */
+function shareCardData(){
+  const now = new Date(), dob = profile.dob, parts = dob.split('-').map(Number);
+  return {
+    name: profile.name.trim(),
+    lp: lifePathFromDOB(dob),
+    animal: animalLabel(personDetails(dob, now).animal),
+    sign: sunSignForDateAstro(parts[0], parts[1], parts[2]).sign,
+    py: personalYearDetail(dob, effectiveYear(dob, now)).label
+  };
+}
+function drawShareCanvas(){
+  const d = shareCardData(), W = 1080, H = 1350;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const bg = g.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#0b0a1f'); bg.addColorStop(.6,'#2a1840'); bg.addColorStop(1,'#a8431f');
+  g.fillStyle = bg; g.fillRect(0,0,W,H);
+  g.fillStyle = 'rgba(255,255,255,.8)';
+  for(let i=0;i<90;i++){ g.globalAlpha = .2 + (i*37%10)/14; g.fillRect((i*211)%W, (i*127)%(H*.7), 3, 3); }
+  g.globalAlpha = 1;
+  g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 3; g.strokeRect(70,120,W-140,1000);
+  g.textAlign = 'center'; g.fillStyle = '#f0a62b'; g.font = '600 44px sans-serif'; g.fillText('FOOTING', W/2, 210);
+  g.fillStyle = '#fff'; g.font = '600 82px sans-serif';
+  let nm = d.name; while(g.measureText(nm).width > W-220 && nm.length>4){ nm = nm.slice(0,-1); }
+  g.fillText(nm, W/2, 380);
+  const cols = [[String(d.lp),'Life Path'],[d.animal,'Chinese sign'],[d.sign,'Sun sign']];
+  cols.forEach((c,i)=>{ const x = 210 + i*330; g.fillStyle = '#fff'; g.font = (c[0].length>3?'600 56px':'600 140px')+' sans-serif'; g.fillText(c[0], x, 640); g.fillStyle = '#b9b6e0'; g.font = '34px sans-serif'; g.fillText(c[1], x, 710); });
+  g.fillStyle = '#b9b6e0'; g.font = '40px sans-serif'; g.fillText('Personal year ' + d.py, W/2, 900);
+  g.fillStyle = '#f0a62b'; g.font = '36px sans-serif'; g.fillText('Find your footing', W/2, 1230);
+  return cv;
+}
+async function shareMyCard(){
+  const cv = drawShareCanvas();
+  const blob = await new Promise(r=>cv.toBlob(r,'image/png'));
+  const file = new File([blob], 'my-footing-card.png', {type:'image/png'});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'My Footing card'}); return; }
+  }catch(e){ if(e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-footing-card.png';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- Home ---------- */
+function renderHome(){
+  const root = document.getElementById('homeRoot');
+  if(!profile){ root.innerHTML=''; return; }
+  const now = new Date(), ud = universalDayOf(now), d = shareCardData();
+  const season = sunSignAtMs(now.getTime());
+  const tools = [['today','🌅','Today'],['energy','🔮','Monthly'],['guide','💬','Guide'],['dictionary','🔤','Letterology'],['explore','🌐','Explore'],['calendar','🗓️','Calendar'],['compare','💞','Compare'],['moon','🌙','Moon'],['journal','📓','Journal'],['fengshui','🧭','Feng Shui'],['profile','📜','My reading']];
+  root.innerHTML = `
+    <p class="hero-line">Welcome back</p>
+    <h1 class="headline">Hello, ${escapeHTMLSafe(firstNameOf(profile.name))}.</h1>
+    <button type="button" class="banner" data-go="today"><div class="bn">${ud.n}</div><div><b>Universal ${ud.n} day</b><div class="subhead" style="margin:2px 0 0;">The ${ordinal(now.getDate())} · ${season} season</div></div></button>
+    <h2 style="margin:22px 0 0;">Explore your tools</h2>
+    <div class="tools-grid">${tools.map(t=>`<button type="button" data-go="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</div>
+    <h2 style="margin:6px 0 0;">Your energy profile</h2>
+    <div class="idcard">
+      <b style="font-size:22px;">${escapeHTMLSafe(d.name)}</b>
+      <div class="idrow"><div><span class="v">${d.lp}</span><small>Life Path</small></div><div><span class="v" style="font-size:22px;">${d.animal}</span><small>Chinese sign</small></div><div><span class="v" style="font-size:22px;">${d.sign}</span><small>Sun sign</small></div></div>
+      <p class="subhead" style="text-align:center;margin:10px 0 0;">Personal year ${d.py}</p>
+    </div>
+    <button type="button" class="primary" id="shareBtn">Share my card</button>`;
+  root.querySelectorAll('[data-go]').forEach(b=>b.onclick = ()=>goScreen(b.dataset.go));
+  document.getElementById('shareBtn').onclick = shareMyCard;
+}
+
+/* ---------- Letterology dictionary ---------- */
+let dictIndex = null, dictLoading = false, dictNum = 9, dictQuery = '', dictShown = 150, dictCustom = null;
+const DICT_NUMS = [1,2,3,4,5,6,7,8,9,11,22,33];
+function dictNumberOf(w){ return reduceNum(nameToNumber(w), true); }
+let dictPromise = null;
+function loadDictionary(){
+  if(dictPromise) return dictPromise;
+  dictPromise = (async ()=>{
+    const idx = {}; DICT_NUMS.forEach(n=>idx[n]=[]);
+    try{
+      const txt = await (await fetch('/words.txt')).text();
+      const lines = txt.split('\n');
+      for(let i=0;i<lines.length;i++){
+        const w = lines[i].trim(); if(!w) continue;
+        const n = dictNumberOf(w); if(idx[n]) idx[n].push(w);
+        if(i % 5000 === 0) await new Promise(r=>setTimeout(r,0));
+      }
+    }catch(e){}
+    try{ dictCustom = JSON.parse(await storageGet('dict:custom') || '[]'); }catch(e){ dictCustom = []; }
+    dictCustom.forEach(w=>{ const n = dictNumberOf(w); if(idx[n] && !idx[n].includes(w)) idx[n].unshift(w); });
+    dictIndex = idx;
+  })();
+  return dictPromise;
+}
+async function renderDictionary(){
+  const root = document.getElementById('dictRoot');
+  if(!profile){ root.innerHTML=''; return; }
+  if(!dictIndex){ root.innerHTML = '<p class="subhead">Loading the word list…</p>'; await loadDictionary(); if(!document.getElementById('screen-dictionary').classList.contains('active')) return; }
+  const lp = lifePathFromDOB(profile.dob);
+  const list = dictIndex[dictNum] || [];
+  const q = dictQuery.trim().toLowerCase();
+  const filtered = q ? list.filter(w=>w.indexOf(q) !== -1) : list;
+  const shown = filtered.slice(0, dictShown);
+  root.innerHTML = `
+    <p class="hero-line">Letterology</p>
+    <p class="subhead" style="margin:4px 0 10px;">Add a word, name, business or street to see its number and what it means. Words use the Chaldean letter values from your reading.</p>
+    <div class="dline"><input id="dictAdd" type="text" placeholder="Add a word" autocomplete="off"><button type="button" class="primary" id="dictAddBtn" style="margin:0;">Add</button></div>
+    <div id="dictAddOut"></div>
+    <div class="dtabs" id="dictTabs">${DICT_NUMS.map(n=>`<button type="button" data-n="${n}" class="${n===dictNum?'on':''}">${n}</button>`).join('')}</div>
+    <h2 style="margin:4px 0;">${dictNum} · ${MONTH_THEME[baseOf(dictNum)][0]}${dictNum>9 ? ' (master number)' : ''}</h2>
+    <p class="subhead" style="margin:0 0 8px;">${list.length.toLocaleString()} words</p>
+    <div class="dline"><input id="dictSearch" type="text" placeholder="Search words with ${dictNum}" value="${escapeHTMLSafe(dictQuery)}" autocomplete="off"></div>
+    <div id="dictList">${shown.map(w=>`<button type="button" class="dword" data-w="${w}"><span>${w}</span><span style="color:var(--moonlight)">›</span></button><div class="dwres" data-r="${w}" style="display:none;"></div>`).join('')}</div>
+    ${filtered.length > shown.length ? `<button type="button" class="ghost" id="dictMore" style="margin-top:12px;">Show more (${(filtered.length-shown.length).toLocaleString()} left)</button>` : ''}
+    ${!filtered.length ? '<p class="subhead">No words match that search.</p>' : ''}`;
+  document.querySelectorAll('#dictTabs button').forEach(b=>b.onclick = ()=>{ dictNum = Number(b.dataset.n); dictShown = 150; dictQuery = ''; renderDictionary(); });
+  const s = document.getElementById('dictSearch');
+  s.oninput = ()=>{ dictQuery = s.value; dictShown = 150; const pos = s.selectionStart; renderDictionary().then(()=>{ const n = document.getElementById('dictSearch'); n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }); };
+  const more = document.getElementById('dictMore'); if(more) more.onclick = ()=>{ dictShown += 300; renderDictionary(); };
+  document.querySelectorAll('#dictList .dword').forEach(b=>b.onclick = ()=>{
+    const out = document.querySelector('.dwres[data-r="'+b.dataset.w+'"]');
+    if(out.style.display === 'none'){ out.innerHTML = renderWordLookupResult(b.dataset.w, lp); out.style.display = 'block'; } else out.style.display = 'none';
+  });
+  const add = async ()=>{
+    const inp = document.getElementById('dictAdd'), w = inp.value.trim();
+    const out = document.getElementById('dictAddOut');
+    if(!w) return;
+    const L = letterology(w);
+    if(!L.first){ out.innerHTML = '<p class="subhead">Type a word with letters in it.</p>'; return; }
+    out.innerHTML = renderWordLookupResult(w, lp);
+    const lw = w.toLowerCase();
+    if(/^[a-z]+$/.test(lw)){
+      const n = dictNumberOf(lw);
+      if(dictIndex[n] && !dictIndex[n].includes(lw)){ dictIndex[n].unshift(lw); dictCustom.push(lw); await storageSet('dict:custom', JSON.stringify(dictCustom)); }
+    }
+  };
+  document.getElementById('dictAddBtn').onclick = add;
+  document.getElementById('dictAdd').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); add(); } });
+}
+
+/* ---------- Explore: brands and dates ---------- */
+const EXPLORE_ITEMS = [
+  ['Apple','1976-04-01','founded'],['Microsoft','1975-04-04','founded'],['Google','1998-09-04','founded'],['Amazon','1994-07-05','founded'],
+  ['Facebook','2004-02-04','launched'],['YouTube','2005-02-14','founded'],['Twitter','2006-03-21','first post'],['Netflix','1997-08-29','founded'],
+  ['Tesla','2003-07-01','founded'],['Lexus','1989-09-01','launched'],['Nike','1964-01-25','founded as Blue Ribbon Sports'],['Disney','1923-10-16','founded'],
+  ['Starbucks','1971-03-30','first store opened'],['Coca-Cola','1886-05-08','first sold'],['Pepsi','1898-08-28','named'],['IBM','1911-06-16','incorporated'],
+  ['Samsung','1938-03-01','founded'],['Toyota Motor','1937-08-28','founded'],['Honda','1948-09-24','founded'],['Sony','1946-05-07','founded'],
+  ['Instagram','2010-10-06','launched'],['Spotify','2006-04-23','founded'],['iPhone','2007-06-29','first sold'],['Wikipedia','2001-01-15','launched'],
+  ['Ford Motor Company','1903-06-16','incorporated'],['Walmart','1962-07-02','first store opened'],['Adidas','1949-08-18','registered'],['PlayStation','1994-12-03','released in Japan'],
+  ['Nintendo','1889-09-23','founded'],['Bitcoin','2009-01-03','first block mined'],['ChatGPT','2022-11-30','launched'],['The Bahamas','1973-07-10','became independent'],
+  ['Apollo 11 Moon landing','1969-07-20','landing'],['Windows 95','1995-08-24','released']
+];
+let exploreTab = 'random', exploreIdx = 0, exploreCustom = null;
+function exploreInfo(item){
+  const [name, date, what] = item, [y,m,d] = date.split('-').map(Number);
+  const start = Date.UTC(y,0,0), doy = Math.round((Date.UTC(y,m-1,d) - start)/86400000);
+  const lp = lifePathFromDOB(date), animal = animalLabel(animalForYear(chineseYearFor(y,m,d))), sign = sunSignForDateAstro(y,m,d).sign;
+  return {name, date, what, y, m, d, doy, lp, animal, sign};
+}
+function exploreFits(info){
+  const fe = friendEnemyFor(lifePathFromDOB(profile.dob));
+  return classifyForLifePath(baseOf(info.lp), fe);
+}
+async function renderExplore(){
+  const root = document.getElementById('exploreRoot');
+  if(!profile){ root.innerHTML=''; return; }
+  if(exploreCustom === null){ try{ exploreCustom = JSON.parse(await storageGet('explore:custom') || '[]'); }catch(e){ exploreCustom = []; } }
+  const all = EXPLORE_ITEMS.concat(exploreCustom);
+  const now = new Date(), tm = now.getMonth()+1, td = now.getDate();
+  let pool = all;
+  if(exploreTab === 'today') pool = all.filter(i=>{ const p = i[1].split('-').map(Number); return p[1]===tm && p[2]===td; });
+  if(exploreTab === 'foryou') pool = all.filter(i=>exploreFits(exploreInfo(i)) === 'friend');
+  if(exploreIdx >= pool.length) exploreIdx = 0;
+  const lp = lifePathFromDOB(profile.dob);
+  let card = '';
+  if(!pool.length){
+    card = `<div class="xcard"><p class="subhead">${exploreTab==='today' ? 'No brand or event in the list has a birthday today. Try Random, or add your own below.' : 'Nothing here yet.'}</p></div>`;
+  } else {
+    const x = exploreInfo(pool[exploreIdx]), fit = exploreFits(x);
+    const fitText = fit==='friend' ? 'a friend number for your life path ' + lp : fit==='enemy' ? 'a number that tends to create friction with your life path ' + lp : 'a mostly neutral number against your life path ' + lp;
+    card = `<div class="xcard"><h2>${escapeHTMLSafe(x.name)}</h2><div class="subhead" style="margin:0;">${new Date(x.y, x.m-1, x.d).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${escapeHTMLSafe(x.what)}</div>
+      <div class="xtrio"><div><small>Numerology</small><span class="v">${x.lp}</span><small>${ordinal(x.doy)} day of year</small></div><div><small>Eastern</small><span class="v" style="font-size:19px;">${x.animal}</span></div><div><small>Western</small><span class="v" style="font-size:19px;">${x.sign}</span></div></div>
+      <p style="text-align:left;">${escapeHTMLSafe(x.name)} ${x.what} on ${new Date(x.y, x.m-1, x.d).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}, giving it ${x.lp} energy, ${x.animal} energy and ${x.sign} influence. For you, that is ${fitText}.</p>
+      <div class="navrow" style="margin-top:10px;"><button type="button" class="guide-clear" id="exPrev">&larr;</button><span class="subhead" style="margin:0;">${exploreIdx+1} of ${pool.length}</span><button type="button" class="guide-clear" id="exNext">${exploreTab==='random'?'Shuffle':'&rarr;'}</button></div></div>`;
+  }
+  root.innerHTML = `
+    <p class="hero-line">Explore</p>
+    <div class="tabs3" id="exTabs">${[['foryou','For You'],['random','Random'],['today','Today']].map(t=>`<button type="button" data-t="${t[0]}" class="${t[0]===exploreTab?'on':''}">${t[1]}</button>`).join('')}</div>
+    ${card}
+    <div class="panel" style="margin-top:16px;"><h2>Check your own brand or date</h2>
+      <p class="subhead">Add a business, app or event and the date it started. Good for a shop opening or a launch you are planning.</p>
+      <div class="dline"><input id="exName" type="text" placeholder="Name"></div>
+      <div class="dline"><input id="exDate" type="date"><button type="button" class="primary" id="exAdd" style="margin:0;">Add</button></div></div>
+    <p class="care-note">Dates are the commonly cited founding or launch dates; sources differ for some. Numerology and astrology here are for reflection and fun, not business forecasts.</p>`;
+  root.querySelectorAll('#exTabs button').forEach(b=>b.onclick = ()=>{ exploreTab = b.dataset.t; exploreIdx = 0; renderExplore(); });
+  const pv = document.getElementById('exPrev'), nx = document.getElementById('exNext');
+  if(pv) pv.onclick = ()=>{ exploreIdx = (exploreIdx - 1 + pool.length) % pool.length; renderExplore(); };
+  if(nx) nx.onclick = ()=>{ exploreIdx = exploreTab==='random' ? Math.floor(Math.random()*pool.length) : (exploreIdx + 1) % pool.length; renderExplore(); };
+  document.getElementById('exAdd').onclick = async ()=>{
+    const n = document.getElementById('exName').value.trim(), dt = document.getElementById('exDate').value;
+    if(!n || !dt) return;
+    exploreCustom.push([n, dt, 'started']); await storageSet('explore:custom', JSON.stringify(exploreCustom));
+    exploreTab = 'random'; exploreIdx = EXPLORE_ITEMS.length + exploreCustom.length - 1; renderExplore();
+  };
+}
+
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   document.querySelectorAll('#wayfind a').forEach(a=>{
     a.classList.toggle('active', a.dataset.screen === name);
   });
+  if(name === 'home') renderHome();
+  if(name === 'energy') renderEnergy();
+  if(name === 'dictionary') renderDictionary();
+  if(name === 'explore') renderExplore();
   if(name === 'profile') renderReading();
   if(name === 'today') renderToday();
   if(name === 'moon') renderMoonPractice();
@@ -3787,7 +4151,7 @@ document.getElementById('wayfind').addEventListener('click', (e)=>{
 function enterApp(){
   document.getElementById('topNav').style.display = 'block';
   document.getElementById('pageFooter').style.display = 'block';
-  showScreen('profile');
+  showScreen('home');
 }
 
 document.getElementById('intakeForm').addEventListener('submit', async (e)=>{

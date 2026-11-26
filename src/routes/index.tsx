@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -43,6 +44,7 @@ function Index() {
         src="/footing.html"
         className="h-full w-full border-0"
       />
+      <InstallPrompt />
     </main>
   );
 }
